@@ -130,9 +130,9 @@ canvas {
 }
 
 .overlay-caption {
-  font-size: 14px;
-  letter-spacing: 0.3em;
-  color: rgba(33, 33, 33, 0.8);
+  font-size: 28px;
+  letter-spacing: 0.08em;
+  color: rgba(33, 33, 33, 0.9);
   margin-bottom: 14px;
 }
 
@@ -1958,12 +1958,14 @@ function gameOver() {
 function setOverlayState(state, scoreValue = 0) {
   charSelectRow.style.display = (state === 'start' || state === 'gameover') ? 'flex' : 'none';
   if (state === 'start') {
-    overlayMessageEl.innerText = 'SHOOT!';
+    overlayMessageEl.innerText = '';
+    overlayMessageEl.style.display = 'none';
     overlaySubheadEl.innerText = 'キャラクターを選んでね';
     overlayCaptionEl.innerText = '🐾 Wan Wan Shooter 🐾';
     overlayScorePanel.classList.remove('visible');
     startBtn.innerText = 'START!';
   } else if (state === 'gameover') {
+    overlayMessageEl.style.display = '';
     overlayMessageEl.innerText = 'GAME OVER';
     overlaySubheadEl.innerText = 'クゥ〜ン、、';
     overlayCaptionEl.innerText = '🐾 Wan Wan Shooter 🐾';
