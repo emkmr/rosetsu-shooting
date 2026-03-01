@@ -1888,7 +1888,7 @@ function gameOver() {
 
 // ===== Overlay =====
 function setOverlayState(state, scoreValue = 0) {
-  charSelectRow.style.display = state === 'start' ? 'flex' : 'none';
+  charSelectRow.style.display = (state === 'start' || state === 'gameover') ? 'flex' : 'none';
   if (state === 'start') {
     overlayMessageEl.innerText = 'SHOOT!';
     overlaySubheadEl.innerText = 'キャラクターを選んでね';
