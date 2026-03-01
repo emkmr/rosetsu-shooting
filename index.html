@@ -178,39 +178,46 @@ canvas {
   color: #2f2b27;
 }
 
-/* キャラクター選択 */
+/* キャラクター選択カルーセル */
 .char-select-row {
-  display: flex;
-  gap: 7px;
-  justify-content: center;
   margin: 8px 0;
 }
 
+.char-carousel-outer {
+  overflow: hidden;
+  width: 100%;
+  position: relative;
+}
+
+.char-carousel-track {
+  display: flex;
+  align-items: center;
+  transition: transform 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  will-change: transform;
+  cursor: grab;
+}
+
 .char-card {
-  flex: 1;
-  max-width: 96px;
+  flex: 0 0 auto;
+  width: 110px;
+  margin: 0 10px;
   border: 3px solid #ccc;
   border-radius: 14px;
-  padding: 8px 5px;
+  padding: 10px 8px;
   cursor: pointer;
   background: rgba(255,220,235,0.8);
   transition: border-color 0.2s, transform 0.2s, opacity 0.2s, box-shadow 0.2s;
   pointer-events: auto;
   opacity: 0.45;
-  transform: scale(0.92);
-}
-
-
-.char-card:active {
   transform: scale(0.88);
+  text-align: center;
 }
 
 .char-card.selected {
   border-color: #ee82ee;
   border-width: 4px;
-  background: rgba(255,220,235,0.8);
   opacity: 1;
-  transform: scale(1.06);
+  transform: scale(1.05);
   box-shadow: 0 8px 24px rgba(238, 130, 238, 0.4);
 }
 
@@ -223,6 +230,26 @@ canvas {
   font-size: 12px;
   font-weight: bold;
   color: #2a2620;
+}
+
+.carousel-dots {
+  display: flex;
+  justify-content: center;
+  gap: 7px;
+  margin-top: 8px;
+}
+
+.carousel-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #ccc;
+  transition: background 0.2s, transform 0.2s;
+}
+
+.carousel-dot.active {
+  background: #ee82ee;
+  transform: scale(1.35);
 }
 
 /* ハートエフェクト */
@@ -274,18 +301,10 @@ canvas {
       <p class="overlay-subhead" id="overlay-subhead">キャラクターを選んでね</p>
 
       <div class="char-select-row" id="char-select-row">
-        <div class="char-card selected" id="card-rosetsu" onclick="selectChar('rosetsu')">
-          <img class="char-canvas" id="preview-rosetsu" src="assets/home-icon.png" width="68" height="68" style="object-fit:contain;">
-          <div class="char-name">ロセツ</div>
+        <div class="char-carousel-outer" id="char-carousel-outer">
+          <div class="char-carousel-track" id="char-carousel-track"></div>
         </div>
-        <div class="char-card" id="card-tetsuju" onclick="selectChar('tetsuju')">
-          <img class="char-canvas" id="preview-tetsuju" src="assets/tetsuju-icon.png" width="68" height="68" style="object-fit:contain; filter: saturate(0.55) brightness(1.1);">
-          <div class="char-name">鉄二</div>
-        </div>
-        <div class="char-card" id="card-bal" onclick="selectChar('bal')">
-          <img class="char-canvas" id="preview-bal" src="assets/bal-icon.png" width="68" height="68" style="object-fit:contain;">
-          <div class="char-name">BAL</div>
-        </div>
+        <div class="carousel-dots" id="carousel-dots"></div>
       </div>
 
       <div class="overlay-score-panel" id="overlay-score-panel">
@@ -403,12 +422,88 @@ resize();
 // ===== Character select =====
 let selectedChar = 'rosetsu';
 
-function selectChar(c) {
-  selectedChar = c;
-  document.getElementById('card-rosetsu').classList.toggle('selected', c === 'rosetsu');
-  document.getElementById('card-tetsuju').classList.toggle('selected', c === 'tetsuju');
-  document.getElementById('card-bal').classList.toggle('selected', c === 'bal');
+// ===== キャラクターカルーセル =====
+const CHARS = [
+  { id: 'rosetsu', name: 'ロセツ', img: 'assets/home-icon.png',    filter: '' },
+  { id: 'tetsuju', name: '鉄二',   img: 'assets/tetsuju-icon.png', filter: 'saturate(0.55) brightness(1.1)' },
+  { id: 'bal',     name: 'BAL',    img: 'assets/bal-icon.png',     filter: '' },
+];
+let charIndex = 0;
+
+function buildCarousel() {
+  const track = document.getElementById('char-carousel-track');
+  const dotsEl = document.getElementById('carousel-dots');
+  track.innerHTML = '';
+  dotsEl.innerHTML = '';
+  CHARS.forEach((ch, i) => {
+    const card = document.createElement('div');
+    card.className = 'char-card' + (i === charIndex ? ' selected' : '');
+    card.id = 'card-' + ch.id;
+    card.addEventListener('click', () => selectCharByIndex(i));
+    const img = document.createElement('img');
+    img.className = 'char-canvas';
+    img.src = ch.img;
+    img.width = 72; img.height = 72;
+    img.style.cssText = 'object-fit:contain;display:block;margin:0 auto 6px;' + (ch.filter ? `filter:${ch.filter};` : '');
+    const name = document.createElement('div');
+    name.className = 'char-name';
+    name.textContent = ch.name;
+    card.appendChild(img);
+    card.appendChild(name);
+    track.appendChild(card);
+    const dot = document.createElement('div');
+    dot.className = 'carousel-dot' + (i === charIndex ? ' active' : '');
+    dotsEl.appendChild(dot);
+  });
+  setTimeout(() => updateCarouselPosition(false), 0);
+}
+
+function updateCarouselPosition(animate) {
+  const track = document.getElementById('char-carousel-track');
+  const outer = document.getElementById('char-carousel-outer');
+  if (!track || !track.children.length) return;
+  const cardEl = track.children[charIndex];
+  const cardW = cardEl.offsetWidth + 20; // 20 = margin both sides
+  const outerW = outer.offsetWidth;
+  const x = outerW / 2 - charIndex * cardW - cardW / 2;
+  track.style.transition = animate ? 'transform 0.3s cubic-bezier(0.25,0.46,0.45,0.94)' : 'none';
+  track.style.transform = `translateX(${x}px)`;
+}
+
+function selectCharByIndex(i) {
+  charIndex = i;
+  selectedChar = CHARS[i].id;
+  Array.from(document.getElementById('char-carousel-track').children).forEach((card, j) => {
+    card.classList.toggle('selected', j === i);
+  });
+  Array.from(document.getElementById('carousel-dots').children).forEach((dot, j) => {
+    dot.classList.toggle('active', j === i);
+  });
+  updateCarouselPosition(true);
   burstHearts();
+}
+
+function initCarouselSwipe() {
+  const outer = document.getElementById('char-carousel-outer');
+  let startX = 0, dragging = false;
+  outer.addEventListener('touchstart', e => { startX = e.touches[0].clientX; dragging = true; }, { passive: true });
+  outer.addEventListener('touchend', e => {
+    if (!dragging) return; dragging = false;
+    const dx = e.changedTouches[0].clientX - startX;
+    if (Math.abs(dx) > 35) {
+      const ni = dx < 0 ? Math.min(CHARS.length - 1, charIndex + 1) : Math.max(0, charIndex - 1);
+      if (ni !== charIndex) selectCharByIndex(ni);
+    }
+  }, { passive: true });
+  outer.addEventListener('mousedown', e => { startX = e.clientX; dragging = true; });
+  window.addEventListener('mouseup', e => {
+    if (!dragging) return; dragging = false;
+    const dx = e.clientX - startX;
+    if (Math.abs(dx) > 35) {
+      const ni = dx < 0 ? Math.min(CHARS.length - 1, charIndex + 1) : Math.max(0, charIndex - 1);
+      if (ni !== charIndex) selectCharByIndex(ni);
+    }
+  });
 }
 
 function burstHearts() {
@@ -2298,6 +2393,7 @@ function gameOver() {
     startScreenEl.style.display = 'flex';
     bgVideo.style.display = 'block';
     bgVideo.play();
+    setTimeout(() => updateCarouselPosition(false), 50);
   }, (DEATH_DURATION / 60) * 1000 + 300);
 }
 
@@ -2325,9 +2421,7 @@ function setOverlayState(state, scoreValue = 0) {
 // ===== Init =====
 function init() {
   resize();
-  selectedChar = gameState.selectedChar =
-    document.getElementById('card-tetsuju').classList.contains('selected') ? 'tetsuju' :
-    document.getElementById('card-bal').classList.contains('selected') ? 'bal' : 'rosetsu';
+  selectedChar = gameState.selectedChar = CHARS[charIndex].id;
 
   bullets = [];
   enemies = [];
@@ -2470,6 +2564,8 @@ startBtn.addEventListener('click', (e) => { e.preventDefault(); init(); });
 startBtn.addEventListener('touchstart', (e) => { e.preventDefault(); init(); });
 
 // Initial state
+buildCarousel();
+initCarouselSwipe();
 setOverlayState('start');
 
 </script>
