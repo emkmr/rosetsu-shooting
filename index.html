@@ -1165,6 +1165,100 @@ function drawSumo(ctx, x, y, size, diving) {
   }
 }
 
+function drawCar(ctx, x, y, size, vx) {
+  const s = size;
+  const bw = s * 0.54;
+  const bh = s * 0.88;
+  const tilt = Math.atan2(vx, 18) * 0.55;
+
+  // local roundRect helper
+  function rr(lx, ly, w, h, r) {
+    ctx.beginPath();
+    ctx.moveTo(lx + r, ly);
+    ctx.lineTo(lx + w - r, ly);
+    ctx.arcTo(lx + w, ly,     lx + w, ly + r,     r);
+    ctx.lineTo(lx + w, ly + h - r);
+    ctx.arcTo(lx + w, ly + h, lx + w - r, ly + h, r);
+    ctx.lineTo(lx + r, ly + h);
+    ctx.arcTo(lx,     ly + h, lx,     ly + h - r, r);
+    ctx.lineTo(lx,     ly + r);
+    ctx.arcTo(lx,     ly,     lx + r, ly,         r);
+    ctx.closePath();
+  }
+
+  ctx.save();
+  ctx.translate(x, y);
+  ctx.rotate(tilt);
+
+  // wheels (drawn behind body)
+  ctx.fillStyle = '#1A1A1A';
+  [[-bw*0.5 - s*0.09, -bh*0.26], [bw*0.5 + s*0.09, -bh*0.26],
+   [-bw*0.5 - s*0.09,  bh*0.24], [bw*0.5 + s*0.09,  bh*0.24]].forEach(([wx, wy]) => {
+    ctx.beginPath();
+    ctx.ellipse(wx, wy, s*0.10, s*0.145, 0, 0, Math.PI*2);
+    ctx.fill();
+  });
+  // rims
+  ctx.fillStyle = '#AAAAAA';
+  [[-bw*0.5 - s*0.09, -bh*0.26], [bw*0.5 + s*0.09, -bh*0.26],
+   [-bw*0.5 - s*0.09,  bh*0.24], [bw*0.5 + s*0.09,  bh*0.24]].forEach(([wx, wy]) => {
+    ctx.beginPath();
+    ctx.arc(wx, wy, s*0.048, 0, Math.PI*2);
+    ctx.fill();
+  });
+
+  // car body
+  ctx.fillStyle = '#CC1111';
+  rr(-bw/2, -bh/2, bw, bh, s*0.09);
+  ctx.fill();
+
+  // racing stripe (clipped to body)
+  ctx.save();
+  rr(-bw/2, -bh/2, bw, bh, s*0.09);
+  ctx.clip();
+  ctx.fillStyle = '#EE2222';
+  ctx.fillRect(-s*0.055, -bh/2, s*0.11, bh);
+  ctx.restore();
+
+  // body outline
+  ctx.strokeStyle = '#880000';
+  ctx.lineWidth = s * 0.032;
+  rr(-bw/2, -bh/2, bw, bh, s*0.09);
+  ctx.stroke();
+
+  // rear window (top / back of car)
+  ctx.fillStyle = '#3A5A88';
+  rr(-bw*0.34, -bh*0.46, bw*0.68, bh*0.21, s*0.04);
+  ctx.fill();
+  ctx.strokeStyle = '#22447A';
+  ctx.lineWidth = s*0.02;
+  ctx.stroke();
+
+  // front windshield (bottom / facing player)
+  ctx.fillStyle = '#99DDFF';
+  rr(-bw*0.36, bh*0.09, bw*0.72, bh*0.22, s*0.04);
+  ctx.fill();
+  ctx.strokeStyle = '#55AADD';
+  ctx.lineWidth = s*0.02;
+  ctx.stroke();
+
+  // headlights (front, facing player)
+  ctx.fillStyle = '#FFFF99';
+  ctx.shadowBlur = s * 0.18; ctx.shadowColor = '#FFFF44';
+  ctx.beginPath(); ctx.ellipse(-bw*0.31, bh*0.40, s*0.085, s*0.056, 0, 0, Math.PI*2); ctx.fill();
+  ctx.beginPath(); ctx.ellipse( bw*0.31, bh*0.40, s*0.085, s*0.056, 0, 0, Math.PI*2); ctx.fill();
+  ctx.shadowBlur = 0;
+
+  // taillights (rear)
+  ctx.fillStyle = '#FF3300';
+  ctx.shadowBlur = s * 0.12; ctx.shadowColor = '#FF0000';
+  ctx.beginPath(); ctx.ellipse(-bw*0.29, -bh*0.44, s*0.074, s*0.048, 0, 0, Math.PI*2); ctx.fill();
+  ctx.beginPath(); ctx.ellipse( bw*0.29, -bh*0.44, s*0.074, s*0.048, 0, 0, Math.PI*2); ctx.fill();
+  ctx.shadowBlur = 0;
+
+  ctx.restore();
+}
+
 function drawEnemies(ctx) {
   enemies.forEach(e => {
     ctx.save();
@@ -1177,6 +1271,7 @@ function drawEnemies(ctx) {
     else if (e.type === 'luchador') drawLuchador(ctx, e.x, e.y, e.size);
     else if (e.type === 'usagi') drawUsagi(ctx, e.x, e.y, e.size);
     else if (e.type === 'sumo') drawSumo(ctx, e.x, e.y, e.size, e.sumoState === 'diving');
+    else if (e.type === 'car')  drawCar(ctx, e.x, e.y, e.size, e.vx);
     ctx.restore();
   });
 }
@@ -1486,14 +1581,14 @@ function drawHUD() {
 
 // ===== Spawning =====
 function spawnEnemy() {
-  const types = ['onigiri', 'ichigo', 'donut', 'luchador', 'sumo'];
+  const types = ['onigiri', 'ichigo', 'donut', 'luchador', 'sumo', 'car'];
   // occasionally spawn usagi
   const roll = Math.random();
   let type;
   if (roll < 0.08) type = 'usagi';
   else type = types[Math.floor(Math.random() * types.length)];
 
-  const size = 38 + Math.random() * 20;
+  const size = type === 'car' ? 50 + Math.random() * 16 : 38 + Math.random() * 20;
   const x = size + Math.random() * (view.w - size * 2);
 
   const patterns = {
@@ -1502,12 +1597,13 @@ function spawnEnemy() {
     donut:    { vx: 0, vy: 1.5, sinAmp: 0, sinFreq: 0, accel: 0.03 },
     luchador: { vx: 0, vy: 1.8, sinAmp: 80, sinFreq: 0.06 },
     usagi:    { vx: (Math.random() > 0.5 ? 1 : -1) * (1.5 + Math.random()), vy: 1.5, sinAmp: 0, sinFreq: 0 },
-    sumo:     { vx: 0, vy: 1.2, sinAmp: 0, sinFreq: 0 }
+    sumo:     { vx: 0, vy: 1.2, sinAmp: 0, sinFreq: 0 },
+    car:      { vx: (Math.random() - 0.5) * 8, vy: 2 + Math.random() * 3, sinAmp: 0, sinFreq: 0 }
   };
 
-  const pts = { onigiri: 100, ichigo: 150, donut: 200, luchador: 175, usagi: 0, sumo: 250 };
+  const pts = { onigiri: 100, ichigo: 150, donut: 200, luchador: 175, usagi: 0, sumo: 250, car: 220 };
   const p = patterns[type];
-  const hp = type === 'usagi' ? 3 : (type === 'donut' ? 3 : type === 'luchador' ? 2 : type === 'sumo' ? 4 : 1);
+  const hp = type === 'usagi' ? 3 : type === 'donut' ? 3 : type === 'luchador' ? 2 : type === 'sumo' ? 4 : type === 'car' ? 2 : 1;
 
   const enemy = {
     type, x, y: -size,
@@ -1528,6 +1624,9 @@ function spawnEnemy() {
     enemy.sumoTimer = 80 + Math.floor(Math.random() * 80);
     enemy.baseVy = 1.2;
   }
+  if (type === 'car') {
+    enemy.carTimer = 20 + Math.floor(Math.random() * 40);
+  }
   enemies.push(enemy);
 }
 
@@ -1544,7 +1643,7 @@ function spawnSpecialItem() {
 // ===== Kill enemy =====
 function killEnemy(e) {
   e.hp = 0;
-  spawnParticles(e.x, e.y, e.type === 'ichigo' ? '#FF6B6B' : e.type === 'donut' ? '#5A6E35' : e.type === 'onigiri' ? '#8B5E3C' : e.type === 'luchador' ? '#CC0000' : e.type === 'sumo' ? '#1A1A7A' : '#fffdf5', 10);
+  spawnParticles(e.x, e.y, e.type === 'ichigo' ? '#FF6B6B' : e.type === 'donut' ? '#5A6E35' : e.type === 'onigiri' ? '#8B5E3C' : e.type === 'luchador' ? '#CC0000' : e.type === 'sumo' ? '#1A1A7A' : e.type === 'car' ? '#CC1111' : '#fffdf5', 10);
   if (e.type !== 'usagi') {
     addScore(e.points * (player.invincible ? 1.2 : 1));
   }
@@ -1615,6 +1714,19 @@ function updateGame() {
     e.x = e.baseX + Math.sin(e.sinPhase) * e.sinAmp;
     e.y += e.vy;
     if (e.type === 'usagi') e.baseX += e.vx;
+    if (e.type === 'car') {
+      e.carTimer--;
+      if (e.carTimer <= 0) {
+        // ランダムに速度と方向を切り替え（蛇行運転）
+        e.vx = (Math.random() - 0.5) * 14;
+        e.vy = 0.6 + Math.random() * 7;
+        e.carTimer = 18 + Math.floor(Math.random() * 50);
+      }
+      e.baseX += e.vx;
+      // 壁バウンド
+      if (e.baseX < e.size * 0.4) { e.baseX = e.size * 0.4; e.vx = Math.abs(e.vx) * 0.75; }
+      if (e.baseX > view.w - e.size * 0.4) { e.baseX = view.w - e.size * 0.4; e.vx = -Math.abs(e.vx) * 0.75; }
+    }
     if (e.type === 'sumo') {
       e.sumoTimer--;
       if (e.sumoState === 'normal' && e.sumoTimer <= 0) {
