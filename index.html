@@ -1042,6 +1042,129 @@ function drawUsagi(ctx, x, y, size) {
   ctx.fillText('★', x + size*0.32, y - size*0.32);
 }
 
+function drawSumo(ctx, x, y, size, diving) {
+  const skin    = '#E8B090';
+  const outline = '#C09070';
+  const mawashi = '#1A1A7A';
+  const gold    = '#C8A030';
+  const hair    = '#1A1A1A';
+  const lw      = size * 0.025;
+
+  // squish vertically when diving
+  ctx.save();
+  if (diving) ctx.transform(1.1, 0, 0, 0.85, x * (1 - 1.1), y * (1 - 0.85));
+
+  // left thigh
+  ctx.fillStyle = skin;
+  ctx.beginPath();
+  ctx.ellipse(x - size*0.22, y + size*0.28, size*0.16, size*0.2, Math.PI*0.12, 0, Math.PI*2);
+  ctx.fill(); ctx.strokeStyle = outline; ctx.lineWidth = lw; ctx.stroke();
+  // right thigh
+  ctx.beginPath();
+  ctx.ellipse(x + size*0.22, y + size*0.28, size*0.16, size*0.2, -Math.PI*0.12, 0, Math.PI*2);
+  ctx.fill(); ctx.stroke();
+
+  // left arm
+  ctx.beginPath();
+  ctx.ellipse(x - size*0.44, y - size*0.02, size*0.2, size*0.12, Math.PI*0.25, 0, Math.PI*2);
+  ctx.fill(); ctx.stroke();
+  // right arm
+  ctx.beginPath();
+  ctx.ellipse(x + size*0.44, y - size*0.02, size*0.2, size*0.12, -Math.PI*0.25, 0, Math.PI*2);
+  ctx.fill(); ctx.stroke();
+
+  // body (big round belly)
+  ctx.fillStyle = skin;
+  ctx.beginPath();
+  ctx.ellipse(x, y, size*0.42, size*0.38, 0, 0, Math.PI*2);
+  ctx.fill(); ctx.strokeStyle = outline; ctx.lineWidth = lw; ctx.stroke();
+
+  // mawashi (lower half of body)
+  ctx.fillStyle = mawashi;
+  ctx.beginPath();
+  ctx.ellipse(x, y + size*0.14, size*0.40, size*0.26, 0, 0, Math.PI);
+  ctx.fill();
+
+  // mawashi front knot
+  ctx.fillStyle = gold;
+  ctx.beginPath();
+  ctx.ellipse(x, y + size*0.10, size*0.13, size*0.08, 0, 0, Math.PI*2);
+  ctx.fill();
+  ctx.fillStyle = mawashi;
+  ctx.beginPath();
+  ctx.arc(x, y + size*0.10, size*0.055, 0, Math.PI*2);
+  ctx.fill();
+
+  // head
+  ctx.fillStyle = skin;
+  ctx.beginPath();
+  ctx.ellipse(x, y - size*0.40, size*0.26, size*0.24, 0, 0, Math.PI*2);
+  ctx.fill(); ctx.strokeStyle = outline; ctx.lineWidth = lw; ctx.stroke();
+
+  // chonmage base
+  ctx.fillStyle = hair;
+  ctx.beginPath();
+  ctx.arc(x, y - size*0.58, size*0.10, 0, Math.PI*2);
+  ctx.fill();
+  // topknot
+  ctx.beginPath();
+  ctx.ellipse(x, y - size*0.70, size*0.045, size*0.11, 0, 0, Math.PI*2);
+  ctx.fill();
+
+  // angry eyebrows
+  ctx.strokeStyle = hair; ctx.lineWidth = size*0.045; ctx.lineCap = 'round';
+  ctx.beginPath();
+  ctx.moveTo(x - size*0.20, y - size*0.49);
+  ctx.lineTo(x - size*0.06, y - size*0.45);
+  ctx.stroke();
+  ctx.beginPath();
+  ctx.moveTo(x + size*0.20, y - size*0.49);
+  ctx.lineTo(x + size*0.06, y - size*0.45);
+  ctx.stroke();
+
+  // eyes
+  ctx.fillStyle = hair;
+  ctx.beginPath();
+  ctx.arc(x - size*0.11, y - size*0.40, size*0.045, 0, Math.PI*2);
+  ctx.fill();
+  ctx.beginPath();
+  ctx.arc(x + size*0.11, y - size*0.40, size*0.045, 0, Math.PI*2);
+  ctx.fill();
+
+  // nose
+  ctx.fillStyle = outline;
+  ctx.beginPath();
+  ctx.ellipse(x, y - size*0.34, size*0.065, size*0.045, 0, 0, Math.PI*2);
+  ctx.fill();
+
+  // snarl mouth
+  ctx.strokeStyle = hair; ctx.lineWidth = size*0.035;
+  ctx.beginPath();
+  ctx.moveTo(x - size*0.10, y - size*0.27);
+  ctx.lineTo(x - size*0.04, y - size*0.23);
+  ctx.lineTo(x + size*0.04, y - size*0.23);
+  ctx.lineTo(x + size*0.10, y - size*0.27);
+  ctx.stroke();
+
+  ctx.restore();
+
+  // speed lines when diving
+  if (diving) {
+    ctx.save();
+    ctx.strokeStyle = 'rgba(255,80,0,0.55)';
+    ctx.lineWidth = size * 0.04;
+    ctx.lineCap = 'round';
+    for (let i = -1; i <= 1; i++) {
+      const lx = x + i * size * 0.3;
+      ctx.beginPath();
+      ctx.moveTo(lx, y - size * 0.55);
+      ctx.lineTo(lx, y - size * 0.75);
+      ctx.stroke();
+    }
+    ctx.restore();
+  }
+}
+
 function drawEnemies(ctx) {
   enemies.forEach(e => {
     ctx.save();
@@ -1053,6 +1176,7 @@ function drawEnemies(ctx) {
     else if (e.type === 'donut') drawSoldier(ctx, e.x, e.y, e.size);
     else if (e.type === 'luchador') drawLuchador(ctx, e.x, e.y, e.size);
     else if (e.type === 'usagi') drawUsagi(ctx, e.x, e.y, e.size);
+    else if (e.type === 'sumo') drawSumo(ctx, e.x, e.y, e.size, e.sumoState === 'diving');
     ctx.restore();
   });
 }
@@ -1362,7 +1486,7 @@ function drawHUD() {
 
 // ===== Spawning =====
 function spawnEnemy() {
-  const types = ['onigiri', 'ichigo', 'donut', 'luchador'];
+  const types = ['onigiri', 'ichigo', 'donut', 'luchador', 'sumo'];
   // occasionally spawn usagi
   const roll = Math.random();
   let type;
@@ -1377,14 +1501,15 @@ function spawnEnemy() {
     ichigo:   { vx: 0, vy: 2 + Math.random() * 0.5, sinAmp: 60, sinFreq: 0.04 },
     donut:    { vx: 0, vy: 1.5, sinAmp: 0, sinFreq: 0, accel: 0.03 },
     luchador: { vx: 0, vy: 1.8, sinAmp: 80, sinFreq: 0.06 },
-    usagi:    { vx: (Math.random() > 0.5 ? 1 : -1) * (1.5 + Math.random()), vy: 1.5, sinAmp: 0, sinFreq: 0 }
+    usagi:    { vx: (Math.random() > 0.5 ? 1 : -1) * (1.5 + Math.random()), vy: 1.5, sinAmp: 0, sinFreq: 0 },
+    sumo:     { vx: 0, vy: 1.2, sinAmp: 0, sinFreq: 0 }
   };
 
-  const pts = { onigiri: 100, ichigo: 150, donut: 200, luchador: 175, usagi: 0 };
+  const pts = { onigiri: 100, ichigo: 150, donut: 200, luchador: 175, usagi: 0, sumo: 250 };
   const p = patterns[type];
-  const hp = type === 'usagi' ? 3 : (type === 'donut' ? 3 : type === 'luchador' ? 2 : 1);
+  const hp = type === 'usagi' ? 3 : (type === 'donut' ? 3 : type === 'luchador' ? 2 : type === 'sumo' ? 4 : 1);
 
-  enemies.push({
+  const enemy = {
     type, x, y: -size,
     baseX: x,
     size,
@@ -1397,7 +1522,13 @@ function spawnEnemy() {
     maxHp: hp,
     flashTimer: 0,
     points: pts[type]
-  });
+  };
+  if (type === 'sumo') {
+    enemy.sumoState = 'normal';
+    enemy.sumoTimer = 80 + Math.floor(Math.random() * 80);
+    enemy.baseVy = 1.2;
+  }
+  enemies.push(enemy);
 }
 
 function spawnSpecialItem() {
@@ -1413,7 +1544,7 @@ function spawnSpecialItem() {
 // ===== Kill enemy =====
 function killEnemy(e) {
   e.hp = 0;
-  spawnParticles(e.x, e.y, e.type === 'ichigo' ? '#FF6B6B' : e.type === 'donut' ? '#5A6E35' : e.type === 'onigiri' ? '#8B5E3C' : e.type === 'luchador' ? '#CC0000' : '#fffdf5', 10);
+  spawnParticles(e.x, e.y, e.type === 'ichigo' ? '#FF6B6B' : e.type === 'donut' ? '#5A6E35' : e.type === 'onigiri' ? '#8B5E3C' : e.type === 'luchador' ? '#CC0000' : e.type === 'sumo' ? '#1A1A7A' : '#fffdf5', 10);
   if (e.type !== 'usagi') {
     addScore(e.points * (player.invincible ? 1.2 : 1));
   }
@@ -1484,6 +1615,25 @@ function updateGame() {
     e.x = e.baseX + Math.sin(e.sinPhase) * e.sinAmp;
     e.y += e.vy;
     if (e.type === 'usagi') e.baseX += e.vx;
+    if (e.type === 'sumo') {
+      e.sumoTimer--;
+      if (e.sumoState === 'normal' && e.sumoTimer <= 0) {
+        // warning: slow way down before dive
+        e.sumoState = 'warning';
+        e.vy = 0.2;
+        e.sumoTimer = 18;
+      } else if (e.sumoState === 'warning' && e.sumoTimer <= 0) {
+        // sudden dive!
+        e.sumoState = 'diving';
+        e.vy = 12 + Math.random() * 3;
+        e.sumoTimer = 28 + Math.floor(Math.random() * 15);
+      } else if (e.sumoState === 'diving' && e.sumoTimer <= 0) {
+        // back to normal descent
+        e.sumoState = 'normal';
+        e.vy = 1.2;
+        e.sumoTimer = 90 + Math.floor(Math.random() * 80);
+      }
+    }
     if (e.flashTimer > 0) e.flashTimer--;
   });
 
