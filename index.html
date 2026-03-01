@@ -183,21 +183,24 @@ canvas {
   padding: 14px 10px;
   cursor: pointer;
   background: rgba(255,220,235,0.8);
-  transition: border-color 0.2s, transform 0.15s;
+  transition: border-color 0.2s, transform 0.2s, opacity 0.2s, box-shadow 0.2s;
   pointer-events: auto;
+  opacity: 0.45;
+  transform: scale(0.92);
 }
 
-#card-tetsuju:not(.selected) {
-  border-color: #87CEEB;
-}
 
 .char-card:active {
-  transform: scale(0.96);
+  transform: scale(0.88);
 }
 
 .char-card.selected {
   border-color: #e05090;
+  border-width: 4px;
   background: rgba(255,220,235,0.8);
+  opacity: 1;
+  transform: scale(1.06);
+  box-shadow: 0 8px 24px rgba(224, 80, 144, 0.35);
 }
 
 .char-canvas {
@@ -237,7 +240,7 @@ canvas {
           <div class="char-name">ロセツ</div>
         </div>
         <div class="char-card" id="card-tetsuju" onclick="selectChar('tetsuju')">
-          <img class="char-canvas" id="preview-tetsuju" src="assets/tetsuju-icon.png" width="100" height="100" style="object-fit:contain;">
+          <img class="char-canvas" id="preview-tetsuju" src="assets/tetsuju-icon.png" width="100" height="100" style="object-fit:contain; filter: saturate(0.55) brightness(1.1);">
           <div class="char-name">鉄二</div>
         </div>
       </div>
@@ -312,11 +315,22 @@ let specialItems = [];
 let particles = [];
 let bigBangTimer = 0;
 let baseballStorm = null;
+let parfaitStorm = null;
 let frameCount = 0;
 let animationId = null;
 let nextEnemySpawn = 60;
 let nextItemSpawn = 300;
 let scrollOffset = 0;
+
+// Death animation
+let dying = false;
+let deathTimer = 0;
+const DEATH_DURATION = 90; // frames before game over screen
+let deathPlayerX = 0, deathPlayerY = 0;
+let deathAngle = 0;
+let deathVy = 0;
+let shakeTimer = 0;
+let deathFlashTimer = 0;
 
 // ===== Resize =====
 function getViewportSize() {
@@ -598,22 +612,123 @@ function drawBullets(ctx) {
 }
 
 // ===== Drawing: Enemies =====
-function drawOnigiri(ctx, x, y, size) {
-  // rice body
-  ctx.fillStyle = '#fffdf5';
-  ctx.strokeStyle = '#e5ddd2';
-  ctx.lineWidth = 1.5;
+function drawKuma(ctx, x, y, size) {
+  const bodyColor  = '#4A2800';
+  const bellyColor = '#8B5E3C';
+  const snoutColor = '#C8A882';
+
+  // Body
+  ctx.fillStyle = bodyColor;
   ctx.beginPath();
-  ctx.moveTo(x, y - size * 0.55);
-  ctx.quadraticCurveTo(x + size * 0.55, y - size * 0.3, x + size * 0.5, y + size * 0.4);
-  ctx.lineTo(x - size * 0.5, y + size * 0.4);
-  ctx.quadraticCurveTo(x - size * 0.55, y - size * 0.3, x, y - size * 0.55);
-  ctx.closePath();
+  ctx.ellipse(x, y + size * 0.15, size * 0.52, size * 0.42, 0, 0, Math.PI * 2);
   ctx.fill();
+
+  // Belly
+  ctx.fillStyle = bellyColor;
+  ctx.beginPath();
+  ctx.ellipse(x, y + size * 0.2, size * 0.28, size * 0.25, 0, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Arms
+  ctx.fillStyle = bodyColor;
+  ctx.beginPath();
+  ctx.ellipse(x - size * 0.52, y + size * 0.1, size * 0.18, size * 0.24, -0.3, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.beginPath();
+  ctx.ellipse(x + size * 0.52, y + size * 0.1, size * 0.18, size * 0.24, 0.3, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Claws
+  ctx.strokeStyle = '#1a1a1a';
+  ctx.lineWidth = Math.max(1.2, size * 0.04);
+  ctx.lineCap = 'round';
+  [-1, 0, 1].forEach(i => {
+    ctx.beginPath();
+    ctx.moveTo(x - size * 0.52 + i * size * 0.065, y + size * 0.3);
+    ctx.lineTo(x - size * 0.54 + i * size * 0.075, y + size * 0.44);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(x + size * 0.52 + i * size * 0.065, y + size * 0.3);
+    ctx.lineTo(x + size * 0.54 + i * size * 0.075, y + size * 0.44);
+    ctx.stroke();
+  });
+
+  // Head
+  ctx.fillStyle = bodyColor;
+  ctx.beginPath();
+  ctx.arc(x, y - size * 0.2, size * 0.38, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Ears
+  ctx.fillStyle = bodyColor;
+  ctx.beginPath();
+  ctx.arc(x - size * 0.28, y - size * 0.52, size * 0.14, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.beginPath();
+  ctx.arc(x + size * 0.28, y - size * 0.52, size * 0.14, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Ear inner
+  ctx.fillStyle = '#7A4020';
+  ctx.beginPath();
+  ctx.arc(x - size * 0.28, y - size * 0.52, size * 0.08, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.beginPath();
+  ctx.arc(x + size * 0.28, y - size * 0.52, size * 0.08, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Snout
+  ctx.fillStyle = snoutColor;
+  ctx.beginPath();
+  ctx.ellipse(x, y - size * 0.1, size * 0.2, size * 0.15, 0, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Nose
+  ctx.fillStyle = '#111';
+  ctx.beginPath();
+  ctx.ellipse(x, y - size * 0.19, size * 0.08, size * 0.055, 0, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Eyes
+  ctx.fillStyle = '#111';
+  ctx.beginPath();
+  ctx.arc(x - size * 0.14, y - size * 0.29, size * 0.065, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.beginPath();
+  ctx.arc(x + size * 0.14, y - size * 0.29, size * 0.065, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Eye glint
+  ctx.fillStyle = '#fff';
+  ctx.beginPath();
+  ctx.arc(x - size * 0.11, y - size * 0.315, size * 0.022, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.beginPath();
+  ctx.arc(x + size * 0.17, y - size * 0.315, size * 0.022, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Fierce eyebrows (angled inward = 怒り顔)
+  ctx.strokeStyle = '#111';
+  ctx.lineWidth = Math.max(2, size * 0.07);
+  ctx.lineCap = 'round';
+  ctx.beginPath();
+  ctx.moveTo(x - size * 0.26, y - size * 0.40);
+  ctx.lineTo(x - size * 0.06, y - size * 0.36);
   ctx.stroke();
-  // nori
-  ctx.fillStyle = '#1f3b2d';
-  ctx.fillRect(x - size * 0.4, y + size * 0.05, size * 0.8, size * 0.32);
+  ctx.beginPath();
+  ctx.moveTo(x + size * 0.26, y - size * 0.40);
+  ctx.lineTo(x + size * 0.06, y - size * 0.36);
+  ctx.stroke();
+
+  // Snarl / angry mouth
+  ctx.strokeStyle = '#111';
+  ctx.lineWidth = Math.max(1.5, size * 0.045);
+  ctx.beginPath();
+  ctx.moveTo(x - size * 0.13, y - size * 0.02);
+  ctx.lineTo(x - size * 0.04, y + size * 0.04);
+  ctx.lineTo(x + size * 0.04, y + size * 0.04);
+  ctx.lineTo(x + size * 0.13, y - size * 0.02);
+  ctx.stroke();
 }
 
 function drawIchigo(ctx, x, y, size) {
@@ -644,36 +759,244 @@ function drawIchigo(ctx, x, y, size) {
   ctx.fill();
 }
 
-function drawDonut(ctx, x, y, size) {
-  // outer
-  ctx.fillStyle = '#F5CBA7';
+function drawSoldier(ctx, x, y, size) {
+  const helmetColor  = '#4A5E2A';
+  const helmetDark   = '#2E3D18';
+  const skinColor    = '#C8956A';
+  const uniformColor = '#5A6E35';
+  const uniformDark  = '#3A4A20';
+  const beltColor    = '#1E1208';
+
+  // Body (uniform)
+  ctx.fillStyle = uniformColor;
   ctx.beginPath();
-  ctx.arc(x, y, size * 0.48, 0, Math.PI*2);
+  if (ctx.roundRect) ctx.roundRect(x - size*0.38, y - size*0.08, size*0.76, size*0.58, size*0.1);
+  else ctx.rect(x - size*0.38, y - size*0.08, size*0.76, size*0.58);
   ctx.fill();
-  // icing
-  ctx.fillStyle = '#D35400';
+
+  // Chest V stripe
+  ctx.fillStyle = uniformDark;
   ctx.beginPath();
-  ctx.arc(x, y, size * 0.42, 0, Math.PI*2);
+  ctx.moveTo(x, y - size*0.06);
+  ctx.lineTo(x - size*0.14, y + size*0.22);
+  ctx.lineTo(x + size*0.14, y + size*0.22);
+  ctx.closePath();
   ctx.fill();
-  // sprinkles
-  const sprinkleColors = ['#FF6B6B','#FFD93D','#6BCB77','#4D96FF','#FF6EFF'];
-  for (let i = 0; i < 6; i++) {
-    const angle = (i / 6) * Math.PI * 2;
-    const sr = size * 0.28;
-    const sx = x + Math.cos(angle) * sr;
-    const sy = y + Math.sin(angle) * sr;
-    ctx.fillStyle = sprinkleColors[i % sprinkleColors.length];
-    ctx.save();
-    ctx.translate(sx, sy);
-    ctx.rotate(angle);
-    ctx.fillRect(-size*0.06, -size*0.015, size*0.12, size*0.03);
-    ctx.restore();
-  }
-  // hole
-  ctx.fillStyle = '#FFD9E6';
+
+  // Belt
+  ctx.fillStyle = beltColor;
+  ctx.fillRect(x - size*0.38, y + size*0.3, size*0.76, size*0.1);
+  // Buckle
+  ctx.fillStyle = '#B8940A';
+  ctx.fillRect(x - size*0.07, y + size*0.315, size*0.14, size*0.07);
+
+  // Arms
+  ctx.fillStyle = uniformColor;
   ctx.beginPath();
-  ctx.arc(x, y, size * 0.18, 0, Math.PI*2);
+  ctx.ellipse(x - size*0.52, y + size*0.1, size*0.15, size*0.24, -0.2, 0, Math.PI*2);
   ctx.fill();
+  ctx.beginPath();
+  ctx.ellipse(x + size*0.52, y + size*0.1, size*0.15, size*0.24, 0.2, 0, Math.PI*2);
+  ctx.fill();
+
+  // Fists
+  ctx.fillStyle = skinColor;
+  ctx.beginPath();
+  ctx.arc(x - size*0.52, y + size*0.3, size*0.1, 0, Math.PI*2);
+  ctx.fill();
+  ctx.beginPath();
+  ctx.arc(x + size*0.52, y + size*0.3, size*0.1, 0, Math.PI*2);
+  ctx.fill();
+
+  // Neck
+  ctx.fillStyle = skinColor;
+  ctx.fillRect(x - size*0.1, y - size*0.17, size*0.2, size*0.12);
+
+  // Face
+  ctx.fillStyle = skinColor;
+  ctx.beginPath();
+  ctx.arc(x, y - size*0.3, size*0.27, 0, Math.PI*2);
+  ctx.fill();
+
+  // Helmet body
+  ctx.fillStyle = helmetColor;
+  ctx.beginPath();
+  ctx.arc(x, y - size*0.34, size*0.31, Math.PI, 0);
+  ctx.fill();
+
+  // Helmet brim
+  ctx.fillStyle = helmetDark;
+  ctx.beginPath();
+  ctx.ellipse(x, y - size*0.35, size*0.37, size*0.08, 0, Math.PI, 0);
+  ctx.fill();
+
+  // Helmet band
+  ctx.strokeStyle = helmetDark;
+  ctx.lineWidth = Math.max(1.5, size * 0.04);
+  ctx.lineCap = 'round';
+  ctx.beginPath();
+  ctx.arc(x, y - size*0.3, size*0.27, 0.25, Math.PI - 0.25);
+  ctx.stroke();
+
+  // Eyes (fierce)
+  ctx.fillStyle = '#111';
+  ctx.beginPath();
+  ctx.arc(x - size*0.1,  y - size*0.3, size*0.052, 0, Math.PI*2);
+  ctx.fill();
+  ctx.beginPath();
+  ctx.arc(x + size*0.1,  y - size*0.3, size*0.052, 0, Math.PI*2);
+  ctx.fill();
+
+  // Eye shine
+  ctx.fillStyle = '#fff';
+  ctx.beginPath();
+  ctx.arc(x - size*0.076, y - size*0.318, size*0.018, 0, Math.PI*2);
+  ctx.fill();
+  ctx.beginPath();
+  ctx.arc(x + size*0.124, y - size*0.318, size*0.018, 0, Math.PI*2);
+  ctx.fill();
+
+  // Fierce eyebrows
+  ctx.strokeStyle = '#111';
+  ctx.lineWidth = Math.max(2, size * 0.065);
+  ctx.beginPath();
+  ctx.moveTo(x - size*0.19, y - size*0.39);
+  ctx.lineTo(x - size*0.04, y - size*0.365);
+  ctx.stroke();
+  ctx.beginPath();
+  ctx.moveTo(x + size*0.19, y - size*0.39);
+  ctx.lineTo(x + size*0.04, y - size*0.365);
+  ctx.stroke();
+
+  // Stern mouth
+  ctx.strokeStyle = '#7A4A30';
+  ctx.lineWidth = Math.max(1.5, size * 0.042);
+  ctx.beginPath();
+  ctx.moveTo(x - size*0.1,  y - size*0.17);
+  ctx.lineTo(x + size*0.1,  y - size*0.17);
+  ctx.stroke();
+}
+
+function drawLuchador(ctx, x, y, size) {
+  const maskColor  = '#CC0000';
+  const maskAccent = '#FFD700';
+  const maskShadow = '#880000';
+  const skinColor  = '#C8956A';
+  const trunksColor = '#1515BB';
+
+  // Body (muscular)
+  ctx.fillStyle = skinColor;
+  ctx.beginPath();
+  ctx.ellipse(x, y + size*0.12, size*0.44, size*0.36, 0, 0, Math.PI*2);
+  ctx.fill();
+
+  // Trunks
+  ctx.fillStyle = trunksColor;
+  ctx.beginPath();
+  if (ctx.roundRect) ctx.roundRect(x - size*0.34, y + size*0.26, size*0.68, size*0.28, size*0.07);
+  else ctx.rect(x - size*0.34, y + size*0.26, size*0.68, size*0.28);
+  ctx.fill();
+
+  // Trunks stripe
+  ctx.fillStyle = maskAccent;
+  ctx.fillRect(x - size*0.34, y + size*0.28, size*0.68, size*0.06);
+
+  // Left arm (raised, fighting pose)
+  ctx.fillStyle = skinColor;
+  ctx.beginPath();
+  ctx.ellipse(x - size*0.5, y - size*0.08, size*0.14, size*0.27, 0.45, 0, Math.PI*2);
+  ctx.fill();
+
+  // Right arm (raised)
+  ctx.beginPath();
+  ctx.ellipse(x + size*0.5, y - size*0.08, size*0.14, size*0.27, -0.45, 0, Math.PI*2);
+  ctx.fill();
+
+  // Fists
+  ctx.beginPath();
+  ctx.arc(x - size*0.54, y - size*0.3, size*0.13, 0, Math.PI*2);
+  ctx.fill();
+  ctx.beginPath();
+  ctx.arc(x + size*0.54, y - size*0.3, size*0.13, 0, Math.PI*2);
+  ctx.fill();
+
+  // Neck
+  ctx.fillStyle = skinColor;
+  ctx.fillRect(x - size*0.1, y - size*0.15, size*0.2, size*0.1);
+
+  // Head (mask)
+  ctx.fillStyle = maskColor;
+  ctx.beginPath();
+  ctx.arc(x, y - size*0.33, size*0.31, 0, Math.PI*2);
+  ctx.fill();
+
+  // Mask top spike / crown shape
+  ctx.beginPath();
+  ctx.moveTo(x - size*0.18, y - size*0.58);
+  ctx.lineTo(x,             y - size*0.68);
+  ctx.lineTo(x + size*0.18, y - size*0.58);
+  ctx.fill();
+
+  // Mask eye cutouts (darker)
+  ctx.fillStyle = maskShadow;
+  ctx.beginPath();
+  ctx.ellipse(x - size*0.13, y - size*0.36, size*0.11, size*0.075, -0.15, 0, Math.PI*2);
+  ctx.fill();
+  ctx.beginPath();
+  ctx.ellipse(x + size*0.13, y - size*0.36, size*0.11, size*0.075, 0.15, 0, Math.PI*2);
+  ctx.fill();
+
+  // Eyes
+  ctx.fillStyle = '#fff';
+  ctx.beginPath();
+  ctx.ellipse(x - size*0.13, y - size*0.365, size*0.072, size*0.052, 0, 0, Math.PI*2);
+  ctx.fill();
+  ctx.beginPath();
+  ctx.ellipse(x + size*0.13, y - size*0.365, size*0.072, size*0.052, 0, 0, Math.PI*2);
+  ctx.fill();
+  ctx.fillStyle = '#111';
+  ctx.beginPath();
+  ctx.arc(x - size*0.11, y - size*0.368, size*0.028, 0, Math.PI*2);
+  ctx.fill();
+  ctx.beginPath();
+  ctx.arc(x + size*0.15, y - size*0.368, size*0.028, 0, Math.PI*2);
+  ctx.fill();
+
+  // Mask decorative gold lines
+  ctx.strokeStyle = maskAccent;
+  ctx.lineWidth = Math.max(1.5, size*0.045);
+  ctx.lineCap = 'round';
+  // Center vertical
+  ctx.beginPath();
+  ctx.moveTo(x, y - size*0.62);
+  ctx.lineTo(x, y - size*0.2);
+  ctx.stroke();
+  // Left curve
+  ctx.beginPath();
+  ctx.moveTo(x - size*0.29, y - size*0.44);
+  ctx.quadraticCurveTo(x - size*0.18, y - size*0.56, x, y - size*0.62);
+  ctx.stroke();
+  // Right curve
+  ctx.beginPath();
+  ctx.moveTo(x + size*0.29, y - size*0.44);
+  ctx.quadraticCurveTo(x + size*0.18, y - size*0.56, x, y - size*0.62);
+  ctx.stroke();
+
+  // Nose (small bump on mask)
+  ctx.fillStyle = maskShadow;
+  ctx.beginPath();
+  ctx.ellipse(x, y - size*0.26, size*0.042, size*0.032, 0, 0, Math.PI*2);
+  ctx.fill();
+
+  // Fierce mouth
+  ctx.strokeStyle = maskAccent;
+  ctx.lineWidth = Math.max(1.5, size*0.04);
+  ctx.beginPath();
+  ctx.moveTo(x - size*0.11, y - size*0.18);
+  ctx.lineTo(x - size*0.03, y - size*0.13);
+  ctx.lineTo(x + size*0.03, y - size*0.13);
+  ctx.lineTo(x + size*0.11, y - size*0.18);
+  ctx.stroke();
 }
 
 function drawUsagi(ctx, x, y, size) {
@@ -725,9 +1048,10 @@ function drawEnemies(ctx) {
     if (e.flashTimer > 0 && Math.floor(e.flashTimer / 3) % 2 === 0) {
       ctx.globalAlpha = 0.4;
     }
-    if (e.type === 'onigiri') drawOnigiri(ctx, e.x, e.y, e.size);
+    if (e.type === 'onigiri') drawKuma(ctx, e.x, e.y, e.size);
     else if (e.type === 'ichigo') drawIchigo(ctx, e.x, e.y, e.size);
-    else if (e.type === 'donut') drawDonut(ctx, e.x, e.y, e.size);
+    else if (e.type === 'donut') drawSoldier(ctx, e.x, e.y, e.size);
+    else if (e.type === 'luchador') drawLuchador(ctx, e.x, e.y, e.size);
     else if (e.type === 'usagi') drawUsagi(ctx, e.x, e.y, e.size);
     ctx.restore();
   });
@@ -823,7 +1147,10 @@ function spawnParticles(x, y, color, count = 8) {
 
 // ===== Drawing: Background =====
 function drawBackground(ctx) {
-  ctx.fillStyle = COLORS.sky;
+  const bgColor = gameState.hearts >= 3 ? '#FFD9E6'
+                : gameState.hearts === 2 ? '#E8D9FF'
+                : '#4682B4';
+  ctx.fillStyle = bgColor;
   ctx.fillRect(0, 0, view.w, view.h);
 
   // scrolling clouds
@@ -913,7 +1240,7 @@ function drawBaseballStorm(ctx) {
 
     // damage enemies
     enemies.forEach(e => {
-      if (e.hp <= 0) return;
+      if (e.hp <= 0 || e.type === 'ichigo') return;
       const dx = ball.x - e.x;
       const dy = ball.y - e.y;
       if (Math.sqrt(dx*dx + dy*dy) < ball.r + e.size * 0.5) {
@@ -930,6 +1257,99 @@ function drawBaseballStorm(ctx) {
   if (baseballStorm.timer <= 0) baseballStorm = null;
 }
 
+// ===== Parfait Storm =====
+function drawParfait(ctx, x, y, size) {
+  // Glass
+  ctx.fillStyle = 'rgba(220, 240, 255, 0.75)';
+  ctx.strokeStyle = '#a8cce8';
+  ctx.lineWidth = Math.max(1, size * 0.04);
+  ctx.beginPath();
+  ctx.moveTo(x - size*0.32, y - size*0.48);
+  ctx.lineTo(x + size*0.32, y - size*0.48);
+  ctx.lineTo(x + size*0.26, y + size*0.5);
+  ctx.lineTo(x - size*0.26, y + size*0.5);
+  ctx.closePath();
+  ctx.fill();
+  ctx.stroke();
+
+  // Strawberry sauce layer
+  ctx.fillStyle = '#FF9EAD';
+  ctx.fillRect(x - size*0.29, y - size*0.1, size*0.58, size*0.18);
+
+  // Cream layer
+  ctx.fillStyle = '#FFF8F0';
+  ctx.fillRect(x - size*0.29, y + size*0.08, size*0.58, size*0.18);
+
+  // Whipped cream on top (swirl)
+  ctx.fillStyle = '#FFFAF5';
+  ctx.beginPath();
+  ctx.arc(x, y - size*0.58, size*0.22, 0, Math.PI*2);
+  ctx.fill();
+  ctx.beginPath();
+  ctx.arc(x - size*0.12, y - size*0.66, size*0.13, 0, Math.PI*2);
+  ctx.fill();
+  ctx.beginPath();
+  ctx.arc(x + size*0.12, y - size*0.66, size*0.13, 0, Math.PI*2);
+  ctx.fill();
+
+  // Strawberry on top
+  ctx.fillStyle = '#FF6B6B';
+  ctx.beginPath();
+  ctx.arc(x, y - size*0.82, size*0.15, 0, Math.PI*2);
+  ctx.fill();
+  // Strawberry seeds
+  ctx.fillStyle = '#fff0f0';
+  [[0,-0.05],[0.06,0.04],[-0.06,0.04]].forEach(([dx,dy]) => {
+    ctx.beginPath();
+    ctx.ellipse(x + dx*size, y - size*0.82 + dy*size, size*0.025, size*0.04, 0, 0, Math.PI*2);
+    ctx.fill();
+  });
+  // Green leaf
+  ctx.fillStyle = '#4CAF50';
+  ctx.beginPath();
+  ctx.moveTo(x, y - size*0.82);
+  ctx.bezierCurveTo(x - size*0.1, y - size*1.0, x - size*0.18, y - size*0.92, x - size*0.08, y - size*0.9);
+  ctx.fill();
+  ctx.beginPath();
+  ctx.moveTo(x, y - size*0.82);
+  ctx.bezierCurveTo(x + size*0.1, y - size*1.0, x + size*0.18, y - size*0.92, x + size*0.08, y - size*0.9);
+  ctx.fill();
+}
+
+function triggerParfaitStorm(onComplete) {
+  const count = Math.max(25, Math.min(70, Math.floor((view.w * view.h) / 14000)));
+  parfaitStorm = { timer: 160, parfaits: [], onComplete };
+  for (let i = 0; i < count; i++) {
+    const size = 18 + Math.random() * 28;
+    parfaitStorm.parfaits.push({
+      x: Math.random() * view.w,
+      y: -60 - Math.random() * view.h * 0.8,
+      size,
+      vy: 1.2 + Math.random() * 2.5,
+      vx: (Math.random() - 0.5) * 1.5,
+      spin: Math.random() * Math.PI * 2
+    });
+  }
+}
+
+function drawParfaitStorm(ctx) {
+  if (!parfaitStorm) return;
+  parfaitStorm.parfaits.forEach(p => {
+    p.x += p.vx;
+    p.y += p.vy;
+    if (p.y > view.h + 80) p.y = -80;
+    ctx.save();
+    ctx.translate(p.x, p.y);
+    drawParfait(ctx, 0, 0, p.size);
+    ctx.restore();
+  });
+  parfaitStorm.timer--;
+  if (parfaitStorm.timer <= 0) {
+    if (parfaitStorm.onComplete) parfaitStorm.onComplete();
+    parfaitStorm = null;
+  }
+}
+
 // ===== HUD =====
 function drawHUD() {
   scoreEl.innerText = `SCORE: ${gameState.score}`;
@@ -942,7 +1362,7 @@ function drawHUD() {
 
 // ===== Spawning =====
 function spawnEnemy() {
-  const types = ['onigiri', 'ichigo', 'donut'];
+  const types = ['onigiri', 'ichigo', 'donut', 'luchador'];
   // occasionally spawn usagi
   const roll = Math.random();
   let type;
@@ -953,15 +1373,16 @@ function spawnEnemy() {
   const x = size + Math.random() * (view.w - size * 2);
 
   const patterns = {
-    onigiri: { vx: 0, vy: 2.5 + Math.random(), sinAmp: 0, sinFreq: 0 },
-    ichigo:  { vx: 0, vy: 2 + Math.random() * 0.5, sinAmp: 60, sinFreq: 0.04 },
-    donut:   { vx: 0, vy: 1.5, sinAmp: 0, sinFreq: 0, accel: 0.03 },
-    usagi:   { vx: (Math.random() > 0.5 ? 1 : -1) * (1.5 + Math.random()), vy: 1.5, sinAmp: 0, sinFreq: 0 }
+    onigiri:  { vx: 0, vy: 2.5 + Math.random(), sinAmp: 0, sinFreq: 0 },
+    ichigo:   { vx: 0, vy: 2 + Math.random() * 0.5, sinAmp: 60, sinFreq: 0.04 },
+    donut:    { vx: 0, vy: 1.5, sinAmp: 0, sinFreq: 0, accel: 0.03 },
+    luchador: { vx: 0, vy: 1.8, sinAmp: 80, sinFreq: 0.06 },
+    usagi:    { vx: (Math.random() > 0.5 ? 1 : -1) * (1.5 + Math.random()), vy: 1.5, sinAmp: 0, sinFreq: 0 }
   };
 
-  const pts = { onigiri: 100, ichigo: 150, donut: 200, usagi: 0 };
+  const pts = { onigiri: 100, ichigo: 150, donut: 200, luchador: 175, usagi: 0 };
   const p = patterns[type];
-  const hp = type === 'usagi' ? 3 : (type === 'donut' ? 3 : 1);
+  const hp = type === 'usagi' ? 3 : (type === 'donut' ? 3 : type === 'luchador' ? 2 : 1);
 
   enemies.push({
     type, x, y: -size,
@@ -992,7 +1413,7 @@ function spawnSpecialItem() {
 // ===== Kill enemy =====
 function killEnemy(e) {
   e.hp = 0;
-  spawnParticles(e.x, e.y, e.type === 'ichigo' ? '#FF6B6B' : e.type === 'donut' ? '#D35400' : '#fffdf5', 10);
+  spawnParticles(e.x, e.y, e.type === 'ichigo' ? '#FF6B6B' : e.type === 'donut' ? '#5A6E35' : e.type === 'onigiri' ? '#8B5E3C' : e.type === 'luchador' ? '#CC0000' : '#fffdf5', 10);
   if (e.type !== 'usagi') {
     addScore(e.points * (player.invincible ? 1.2 : 1));
   }
@@ -1073,7 +1494,7 @@ function updateGame() {
   bullets = bullets.filter(b => {
     let hit = false;
     enemies.forEach(e => {
-      if (e.hp <= 0) return;
+      if (e.hp <= 0 || e.type === 'ichigo') return;
       if (circleRectOverlap(b.x, b.y, b.r, e.x - e.size*0.5, e.y - e.size*0.5, e.size, e.size)) {
         hit = true;
         e.hp--;
@@ -1091,10 +1512,28 @@ function updateGame() {
     return true;
   });
 
-  // enemy vs player
+  // いちご：触れたらパルフェストーム＆ハート回復（無条件）
+  enemies = enemies.filter(e => {
+    if (e.hp <= 0 || e.type !== 'ichigo') return true;
+    if (circleRectOverlap(e.x, e.y, e.size * 0.5, player.x, player.y, player.w, player.h)) {
+      e.hp = 0;
+      spawnParticles(e.x, e.y, '#FF6B6B', 10);
+      if (!parfaitStorm) {
+        triggerParfaitStorm(() => {
+          if (gameState.hearts < MAX_HEARTS) {
+            gameState.hearts++;
+          }
+        });
+      }
+      return false;
+    }
+    return true;
+  });
+
+  // enemy vs player（いちご以外）
   if (player.hitTimer <= 0) {
     enemies.forEach(e => {
-      if (e.hp <= 0) return;
+      if (e.hp <= 0 || e.type === 'ichigo') return;
       if (circleRectOverlap(e.x, e.y, e.size * 0.5, player.x, player.y, player.w, player.h)) {
         if (player.invincible) {
           killEnemy(e);
@@ -1165,11 +1604,24 @@ function collectItem(type) {
 // ===== Game over =====
 function gameOver() {
   gameState.isRunning = false;
+  dying = true;
+  deathTimer = 0;
+  deathAngle = 0;
+  deathVy = -4;
+  deathPlayerX = player.x + player.w / 2;
+  deathPlayerY = player.y + player.h;
+  shakeTimer = 50;
+  deathFlashTimer = 50;
+  enemies = [];
+  bullets = [];
+  specialItems = [];
   const finalScore = gameState.score;
+  // show game over screen after animation finishes
   setTimeout(() => {
+    dying = false;
     setOverlayState('gameover', finalScore);
     startScreenEl.style.display = 'flex';
-  }, 1200);
+  }, (DEATH_DURATION / 60) * 1000 + 300);
 }
 
 // ===== Overlay =====
@@ -1202,7 +1654,12 @@ function init() {
   particles = [];
   bigBangTimer = 0;
   baseballStorm = null;
+  parfaitStorm = null;
   frameCount = 0;
+  dying = false;
+  deathTimer = 0;
+  shakeTimer = 0;
+  deathFlashTimer = 0;
   scrollOffset = 0;
   nextEnemySpawn = 60;
   nextItemSpawn = 300;
@@ -1228,22 +1685,65 @@ function init() {
 
 // ===== Game loop =====
 function gameLoop() {
-  if (!gameState.isRunning) return;
+  if (!gameState.isRunning && !dying) return;
 
   ctx.clearRect(0, 0, view.w, view.h);
 
-  drawBackground(ctx);
-  updateGame();
-  drawEnemies(ctx);
-  drawSpecialItems(ctx);
-  drawBullets(ctx);
-  drawPlayer(ctx);
-  drawParticles(ctx);
-  if (bigBangTimer > 0) {
-    drawBigBangEffect(ctx, bigBangTimer / BIG_BANG_DURATION_FRAMES);
+  // Screen shake offset
+  const doShake = shakeTimer > 0;
+  if (doShake) {
+    const mag = Math.min(shakeTimer, 12);
+    ctx.save();
+    ctx.translate((Math.random() - 0.5) * mag, (Math.random() - 0.5) * mag);
+    shakeTimer--;
   }
-  drawBaseballStorm(ctx);
-  drawHUD();
+
+  drawBackground(ctx);
+
+  if (gameState.isRunning) {
+    updateGame();
+    drawEnemies(ctx);
+    drawSpecialItems(ctx);
+    drawBullets(ctx);
+    drawPlayer(ctx);
+    drawParticles(ctx);
+    if (bigBangTimer > 0) {
+      drawBigBangEffect(ctx, bigBangTimer / BIG_BANG_DURATION_FRAMES);
+    }
+    drawBaseballStorm(ctx);
+    drawParfaitStorm(ctx);
+    drawHUD();
+  }
+
+  if (dying) {
+    // update death physics
+    deathVy += 0.4; // gravity
+    deathPlayerY += deathVy;
+    deathAngle += 0.18;
+    deathTimer++;
+
+    // draw spinning falling player
+    ctx.save();
+    ctx.globalAlpha = Math.max(0, 1 - deathTimer / DEATH_DURATION);
+    ctx.translate(deathPlayerX, deathPlayerY);
+    ctx.rotate(deathAngle);
+    const s = TILE_SIZE * 0.055;
+    if (selectedChar === 'tetsuju') drawTetsuju(ctx, TILE_SIZE * 1.4, frameCount);
+    else drawChihuahua(ctx, s, frameCount);
+    ctx.restore();
+
+    // red flash overlay
+    if (deathFlashTimer > 0) {
+      const alpha = (deathFlashTimer / 50) * 0.55;
+      ctx.fillStyle = `rgba(220,0,0,${alpha})`;
+      ctx.fillRect(0, 0, view.w, view.h);
+      deathFlashTimer--;
+    }
+
+    drawHUD();
+  }
+
+  if (doShake) ctx.restore();
 
   frameCount++;
   animationId = requestAnimationFrame(gameLoop);
