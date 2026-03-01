@@ -665,11 +665,13 @@ function drawBal(c, size, frame) {
   c.fillStyle = '#3A2020';
   c.beginPath(); c.ellipse(0, -s*0.10 + bob, s*0.055, s*0.038, 0, 0, Math.PI*2); c.fill();
 
-  // --- 口・舌（ピンク、出してる） ---
-  c.fillStyle = '#D4B0B8';
-  c.beginPath(); c.ellipse(0, -s*0.02 + bob, s*0.095, s*0.075, 0, 0, Math.PI*2); c.fill();
-  c.fillStyle = '#C09AA6';
-  c.beginPath(); c.ellipse(0, s*0.02 + bob, s*0.07, s*0.04, 0, 0, Math.PI*2); c.fill();
+  // --- にっこり口 ---
+  c.strokeStyle = '#555555';
+  c.lineWidth = s * 0.032;
+  c.lineCap = 'round';
+  c.beginPath();
+  c.arc(0, -s*0.04 + bob, s*0.09, 0.25, Math.PI - 0.25);
+  c.stroke();
 
   // --- 青サングラス ---
   const gx = 0, gy = -s*0.22 + bob;
