@@ -354,6 +354,7 @@ let specialItems = [];
 let particles = [];
 let baseballStorm = null;
 let parfaitStorm = null;
+let trumpBullets = [];
 let frameCount = 0;
 let animationId = null;
 let nextEnemySpawn = 60;
@@ -1696,6 +1697,40 @@ function triggerBaseballStorm() {
   }
 }
 
+function drawTrumpBullets(ctx) {
+  trumpBullets.forEach(tb => {
+    ctx.save();
+    ctx.translate(tb.x, tb.y);
+    ctx.rotate(tb.angle + Math.PI / 2);
+    const r = tb.r;
+    // 札束の重なり（3枚）
+    for (let i = 2; i >= 0; i--) {
+      ctx.save();
+      ctx.translate(i * 1.5, -i * 1.5);
+      ctx.fillStyle = i === 0 ? '#2E8B2E' : '#3A9A3A';
+      ctx.strokeStyle = '#1A5C1A';
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.roundRect(-r, -r * 0.6, r * 2, r * 1.2, 3);
+      ctx.fill();
+      ctx.stroke();
+      if (i === 0) {
+        // ドルマーク
+        ctx.fillStyle = '#AAFF88';
+        ctx.font = `bold ${Math.round(r * 1.1)}px sans-serif`;
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText('$', 0, 0);
+        // 帯
+        ctx.fillStyle = '#1A5C1A';
+        ctx.fillRect(-r, -r * 0.08, r * 2, r * 0.18);
+      }
+      ctx.restore();
+    }
+    ctx.restore();
+  });
+}
+
 function drawBaseballStorm(ctx) {
   if (!baseballStorm) return;
   baseballStorm.balls.forEach(ball => {
@@ -1894,6 +1929,9 @@ function spawnEnemy() {
   if (type === 'car') {
     enemy.carTimer = 20 + Math.floor(Math.random() * 40);
   }
+  if (type === 'trump') {
+    enemy.trumpShootTimer = 60 + Math.floor(Math.random() * 40);
+  }
   enemies.push(enemy);
 }
 
@@ -2013,6 +2051,24 @@ function updateGame() {
         e.sumoTimer = 90 + Math.floor(Math.random() * 80);
       }
     }
+    if (e.type === 'trump' && e.y > -e.size) {
+      e.trumpShootTimer--;
+      if (e.trumpShootTimer <= 0) {
+        // プレイヤーに向けて札束ビーム発射
+        const dx = (player.x + player.w/2) - e.x;
+        const dy = (player.y + player.h/2) - e.y;
+        const dist = Math.sqrt(dx*dx + dy*dy) || 1;
+        const speed = 4.5;
+        trumpBullets.push({
+          x: e.x, y: e.y + e.size * 0.1,
+          vx: (dx/dist) * speed,
+          vy: (dy/dist) * speed,
+          r: 12,
+          angle: Math.atan2(dy, dx)
+        });
+        e.trumpShootTimer = 80 + Math.floor(Math.random() * 40);
+      }
+    }
     if (e.flashTimer > 0) e.flashTimer--;
   });
 
@@ -2095,6 +2151,18 @@ function updateGame() {
       player.invincibleTimer = 0;
     }
   }
+
+  // trump bullets update & collision
+  trumpBullets = trumpBullets.filter(tb => {
+    tb.x += tb.vx;
+    tb.y += tb.vy;
+    if (tb.x < -tb.r || tb.x > view.w + tb.r || tb.y > view.h + tb.r) return false;
+    if (circleRectOverlap(tb.x, tb.y, tb.r * 0.8, player.x, player.y, player.w, player.h)) {
+      takeDamage();
+      return false;
+    }
+    return true;
+  });
 
   if (player.hitTimer > 0) player.hitTimer--;
 
@@ -2179,6 +2247,7 @@ function init() {
   particles = [];
   baseballStorm = null;
   parfaitStorm = null;
+  trumpBullets = [];
   frameCount = 0;
   dying = false;
   deathTimer = 0;
@@ -2233,6 +2302,7 @@ function gameLoop() {
     drawPlayer(ctx);
     drawParticles(ctx);
     drawBaseballStorm(ctx);
+    drawTrumpBullets(ctx);
     drawParfaitStorm(ctx);
     drawHUD();
   }
