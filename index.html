@@ -1440,10 +1440,26 @@ function spawnParticles(x, y, color, count = 8) {
 }
 
 // ===== Drawing: Background =====
+function lerpColor(a, b, t) {
+  const ah = parseInt(a.slice(1), 16);
+  const bh = parseInt(b.slice(1), 16);
+  const ar = (ah >> 16) & 0xff, ag = (ah >> 8) & 0xff, ab = ah & 0xff;
+  const br = (bh >> 16) & 0xff, bg = (bh >> 8) & 0xff, bb = bh & 0xff;
+  const r = Math.round(ar + (br - ar) * t);
+  const g = Math.round(ag + (bg - ag) * t);
+  const bv = Math.round(ab + (bb - ab) * t);
+  return `rgb(${r},${g},${bv})`;
+}
+
 function drawBackground(ctx) {
-  const bgColor = gameState.hearts >= 3 ? '#FFD9E6'
-                : gameState.hearts === 2 ? '#E8D9FF'
-                : '#4682B4';
+  const baseColor = gameState.hearts >= 3 ? '#FFD9E6'
+                  : gameState.hearts === 2 ? '#E8D9FF'
+                  : '#4682B4';
+  let bgColor = baseColor;
+  if (dying) {
+    const t = Math.min(deathTimer / (DEATH_DURATION * 0.7), 1);
+    bgColor = lerpColor(baseColor, '#CC0000', t);
+  }
   ctx.fillStyle = bgColor;
   ctx.fillRect(0, 0, view.w, view.h);
 
