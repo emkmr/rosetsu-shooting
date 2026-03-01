@@ -1317,6 +1317,135 @@ function drawCar(ctx, x, y, size, vx) {
   ctx.restore();
 }
 
+function drawTrump(ctx, x, y, size) {
+  const s = size;
+  ctx.save();
+  ctx.translate(x, y);
+
+  // ===== スーツ（体） =====
+  const suitColor = '#1B3A8C';
+  // 左腕
+  ctx.fillStyle = suitColor;
+  ctx.beginPath();
+  ctx.ellipse(-s*0.38, s*0.08, s*0.13, s*0.22, -0.3, 0, Math.PI*2);
+  ctx.fill();
+  // 右腕（小さい手 w）
+  ctx.beginPath();
+  ctx.ellipse( s*0.38, s*0.08, s*0.13, s*0.22,  0.3, 0, Math.PI*2);
+  ctx.fill();
+  // 胴体
+  ctx.fillStyle = suitColor;
+  ctx.beginPath();
+  ctx.ellipse(0, s*0.18, s*0.32, s*0.30, 0, 0, Math.PI*2);
+  ctx.fill();
+
+  // ワイシャツ白
+  ctx.fillStyle = '#FFFFFF';
+  ctx.beginPath();
+  ctx.ellipse(0, s*0.10, s*0.12, s*0.22, 0, 0, Math.PI*2);
+  ctx.fill();
+
+  // 赤ネクタイ（長い）
+  ctx.fillStyle = '#DD0000';
+  ctx.beginPath();
+  ctx.moveTo(-s*0.07, -s*0.06);
+  ctx.lineTo( s*0.07, -s*0.06);
+  ctx.lineTo( s*0.10,  s*0.35);
+  ctx.lineTo( 0,       s*0.45);
+  ctx.lineTo(-s*0.10,  s*0.35);
+  ctx.closePath();
+  ctx.fill();
+  // ネクタイ結び目
+  ctx.fillStyle = '#BB0000';
+  ctx.beginPath();
+  ctx.ellipse(0, -s*0.06, s*0.07, s*0.05, 0, 0, Math.PI*2);
+  ctx.fill();
+
+  // ===== 顔（オレンジ） =====
+  const skin = '#F4884A';
+  const skinDark = '#D4662A';
+  ctx.fillStyle = skin;
+  ctx.beginPath();
+  ctx.ellipse(0, -s*0.28, s*0.26, s*0.24, 0, 0, Math.PI*2);
+  ctx.fill();
+
+  // 顔の輪郭
+  ctx.strokeStyle = skinDark;
+  ctx.lineWidth = s * 0.025;
+  ctx.stroke();
+
+  // 目の周り白（目袋感）
+  ctx.fillStyle = '#FAC090';
+  ctx.beginPath(); ctx.ellipse(-s*0.10, -s*0.28, s*0.09, s*0.065, 0, 0, Math.PI*2); ctx.fill();
+  ctx.beginPath(); ctx.ellipse( s*0.10, -s*0.28, s*0.09, s*0.065, 0, 0, Math.PI*2); ctx.fill();
+
+  // 目
+  ctx.fillStyle = '#1A1A5A';
+  ctx.beginPath(); ctx.arc(-s*0.10, -s*0.29, s*0.038, 0, Math.PI*2); ctx.fill();
+  ctx.beginPath(); ctx.arc( s*0.10, -s*0.29, s*0.038, 0, Math.PI*2); ctx.fill();
+  // 目ハイライト
+  ctx.fillStyle = '#fff';
+  ctx.beginPath(); ctx.arc(-s*0.11, -s*0.305, s*0.012, 0, Math.PI*2); ctx.fill();
+  ctx.beginPath(); ctx.arc( s*0.09,  -s*0.305, s*0.012, 0, Math.PI*2); ctx.fill();
+
+  // 眉毛（金髪・怒り）
+  ctx.strokeStyle = '#C8A020';
+  ctx.lineWidth = s * 0.048;
+  ctx.lineCap = 'round';
+  ctx.beginPath();
+  ctx.moveTo(-s*0.19, -s*0.39); ctx.lineTo(-s*0.04, -s*0.36); ctx.stroke();
+  ctx.beginPath();
+  ctx.moveTo( s*0.19, -s*0.39); ctx.lineTo( s*0.04, -s*0.36); ctx.stroke();
+
+  // 鼻（大きめ）
+  ctx.fillStyle = skinDark;
+  ctx.beginPath();
+  ctx.ellipse(0, -s*0.21, s*0.07, s*0.055, 0, 0, Math.PI*2);
+  ctx.fill();
+
+  // 口（ムスッと）
+  ctx.strokeStyle = '#8B3010';
+  ctx.lineWidth = s * 0.038;
+  ctx.lineCap = 'round';
+  ctx.beginPath();
+  ctx.moveTo(-s*0.11, -s*0.12);
+  ctx.quadraticCurveTo(0, -s*0.09, s*0.11, -s*0.12);
+  ctx.stroke();
+
+  // ===== 髪（コームオーバー） =====
+  const hairColor = '#F0C030';
+  // 後頭部のボリューム
+  ctx.fillStyle = hairColor;
+  ctx.beginPath();
+  ctx.ellipse(0, -s*0.50, s*0.26, s*0.13, 0, 0, Math.PI*2);
+  ctx.fill();
+  // サイドから流れる大きなコームオーバー
+  ctx.beginPath();
+  ctx.moveTo(-s*0.26, -s*0.44);
+  ctx.quadraticCurveTo(-s*0.10, -s*0.66, s*0.22, -s*0.52);
+  ctx.quadraticCurveTo( s*0.28, -s*0.46,  s*0.24, -s*0.42);
+  ctx.quadraticCurveTo( s*0.10, -s*0.56, -s*0.14, -s*0.46);
+  ctx.closePath();
+  ctx.fill();
+  // 髪の線（流れ感）
+  ctx.strokeStyle = '#D4A010';
+  ctx.lineWidth = s * 0.022;
+  for (let i = 0; i < 3; i++) {
+    const t = i / 2;
+    ctx.beginPath();
+    ctx.moveTo(-s*0.20 + t*s*0.18, -s*0.46);
+    ctx.quadraticCurveTo(-s*0.05 + t*s*0.18, -s*0.60, s*0.15 + t*s*0.06, -s*0.48);
+    ctx.stroke();
+  }
+
+  // ===== 小さい手 =====
+  ctx.fillStyle = skin;
+  ctx.beginPath(); ctx.ellipse(-s*0.44, s*0.24, s*0.09, s*0.07, 0.2, 0, Math.PI*2); ctx.fill();
+  ctx.beginPath(); ctx.ellipse( s*0.44, s*0.24, s*0.09, s*0.07, -0.2, 0, Math.PI*2); ctx.fill();
+
+  ctx.restore();
+}
+
 function drawEnemies(ctx) {
   enemies.forEach(e => {
     ctx.save();
@@ -1329,7 +1458,8 @@ function drawEnemies(ctx) {
     else if (e.type === 'luchador') drawLuchador(ctx, e.x, e.y, e.size);
     else if (e.type === 'usagi') drawUsagi(ctx, e.x, e.y, e.size);
     else if (e.type === 'sumo') drawSumo(ctx, e.x, e.y, e.size, e.sumoState === 'diving');
-    else if (e.type === 'car')  drawCar(ctx, e.x, e.y, e.size, e.vx);
+    else if (e.type === 'car')   drawCar(ctx, e.x, e.y, e.size, e.vx);
+    else if (e.type === 'trump') drawTrump(ctx, e.x, e.y, e.size);
     ctx.restore();
   });
 }
@@ -1717,7 +1847,7 @@ function drawHUD() {
 
 // ===== Spawning =====
 function spawnEnemy() {
-  const types = ['onigiri', 'ichigo', 'donut', 'luchador', 'sumo', 'car'];
+  const types = ['onigiri', 'ichigo', 'donut', 'luchador', 'sumo', 'car', 'trump'];
   // occasionally spawn usagi
   const roll = Math.random();
   let type;
@@ -1734,12 +1864,13 @@ function spawnEnemy() {
     luchador: { vx: 0, vy: 1.8, sinAmp: 80, sinFreq: 0.06 },
     usagi:    { vx: (Math.random() > 0.5 ? 1 : -1) * (1.5 + Math.random()), vy: 1.5, sinAmp: 0, sinFreq: 0 },
     sumo:     { vx: 0, vy: 1.2, sinAmp: 0, sinFreq: 0 },
-    car:      { vx: (Math.random() - 0.5) * 8, vy: 2 + Math.random() * 3, sinAmp: 0, sinFreq: 0 }
+    car:      { vx: (Math.random() - 0.5) * 8, vy: 2 + Math.random() * 3, sinAmp: 0, sinFreq: 0 },
+    trump:    { vx: 0, vy: 1.0 + Math.random() * 0.5, sinAmp: 55, sinFreq: 0.03 }
   };
 
-  const pts = { onigiri: 100, ichigo: 150, donut: 200, luchador: 175, usagi: 0, sumo: 250, car: 220 };
+  const pts = { onigiri: 100, ichigo: 150, donut: 200, luchador: 175, usagi: 0, sumo: 250, car: 220, trump: 300 };
   const p = patterns[type];
-  const hp = type === 'usagi' ? 3 : type === 'donut' ? 3 : type === 'luchador' ? 2 : type === 'sumo' ? 4 : type === 'car' ? 2 : 1;
+  const hp = type === 'usagi' ? 3 : type === 'donut' ? 3 : type === 'luchador' ? 2 : type === 'sumo' ? 4 : type === 'car' ? 2 : type === 'trump' ? 5 : 1;
 
   const enemy = {
     type, x, y: -size,
@@ -1779,7 +1910,7 @@ function spawnSpecialItem() {
 // ===== Kill enemy =====
 function killEnemy(e) {
   e.hp = 0;
-  spawnParticles(e.x, e.y, e.type === 'ichigo' ? '#FF6B6B' : e.type === 'donut' ? '#5A6E35' : e.type === 'onigiri' ? '#8B5E3C' : e.type === 'luchador' ? '#CC0000' : e.type === 'sumo' ? '#1A1A7A' : e.type === 'car' ? '#CC1111' : '#fffdf5', 10);
+  spawnParticles(e.x, e.y, e.type === 'ichigo' ? '#FF6B6B' : e.type === 'donut' ? '#5A6E35' : e.type === 'onigiri' ? '#8B5E3C' : e.type === 'luchador' ? '#CC0000' : e.type === 'sumo' ? '#1A1A7A' : e.type === 'car' ? '#CC1111' : e.type === 'trump' ? '#F4884A' : '#fffdf5', 10);
   if (e.type !== 'usagi') {
     addScore(e.points * (player.invincible ? 1.2 : 1));
   }
