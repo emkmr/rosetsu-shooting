@@ -1,0 +1,1296 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<title>ロセツシューティング</title>
+<link rel="icon" type="image/png" href="assets/home-icon.png">
+<link rel="apple-touch-icon" href="assets/home-icon.png">
+<meta name="apple-mobile-web-app-title" content="ロセツシューティング">
+<style>
+@import url('https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@700&display=swap');
+
+body {
+  margin: 0;
+  padding: 0;
+  background: #FFD9E6;
+  overflow: hidden;
+  font-family: 'M PLUS Rounded 1c', sans-serif;
+  touch-action: none;
+  width: 100vw;
+  height: 100vh;
+}
+
+#game-container {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+}
+
+canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+#ui-layer {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  display: flex;
+  flex-direction: column;
+}
+
+.hud {
+  padding-top: max(20px, env(safe-area-inset-top) + 20px);
+  padding-left: max(20px, env(safe-area-inset-left) + 20px);
+  padding-right: max(20px, env(safe-area-inset-right) + 20px);
+  padding-bottom: 10px;
+  width: 100%;
+  max-width: 420px;
+  margin: 0 auto;
+  box-sizing: border-box;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  z-index: 100;
+}
+
+#score-display {
+  font-size: 18px;
+  color: #2a2620;
+  font-weight: 700;
+}
+
+#hearts-display {
+  font-size: 22px;
+  letter-spacing: 4px;
+}
+
+#start-screen {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(255, 217, 230, 0.92);
+  backdrop-filter: blur(12px);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  color: #333;
+  z-index: 200;
+  pointer-events: auto;
+}
+
+.start-btn {
+  padding: 18px 40px;
+  font-size: 18px;
+  font-weight: bold;
+  background: #1f1b1a;
+  color: white;
+  border: none;
+  cursor: pointer;
+  border-radius: 50px;
+  box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+  transition: transform 0.2s, box-shadow 0.2s;
+  font-family: inherit;
+  margin-top: 10px;
+}
+
+.start-btn:active {
+  transform: scale(0.95);
+  box-shadow: 0 5px 10px rgba(0,0,0,0.1);
+}
+
+.overlay-card {
+  width: min(360px, calc(100% - 40px));
+  border-radius: 28px;
+  border: 4px solid #2f4357;
+  padding: 28px 26px 36px;
+  background: #FFD9E6;
+  box-shadow: 0 25px 40px rgba(0,0,0,0.2);
+  text-align: center;
+  color: #2c2c2c;
+}
+
+.overlay-caption {
+  font-size: 14px;
+  letter-spacing: 0.3em;
+  color: rgba(33, 33, 33, 0.8);
+  margin-bottom: 14px;
+}
+
+.overlay-message {
+  font-size: 32px;
+  margin: 0 0 6px;
+  color: #2e2e2e;
+}
+
+.overlay-subhead {
+  font-size: 16px;
+  margin: 4px 0 16px;
+  color: rgba(34,34,34,0.7);
+}
+
+.overlay-score-panel {
+  display: none;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  margin: 14px 0;
+  color: #c67b1d;
+}
+
+.overlay-score-panel.visible {
+  display: flex;
+}
+
+.overlay-star {
+  font-size: 26px;
+}
+
+.overlay-score-text {
+  font-size: 16px;
+  line-height: 1.2;
+}
+
+.overlay-score-value {
+  font-size: 36px;
+  font-weight: 700;
+  display: block;
+  color: #2f2b27;
+}
+
+/* キャラクター選択 */
+.char-select-row {
+  display: flex;
+  gap: 14px;
+  justify-content: center;
+  margin: 14px 0;
+}
+
+.char-card {
+  flex: 1;
+  max-width: 130px;
+  border: 3px solid #ccc;
+  border-radius: 18px;
+  padding: 14px 10px;
+  cursor: pointer;
+  background: rgba(255,220,235,0.8);
+  transition: border-color 0.2s, transform 0.15s;
+  pointer-events: auto;
+}
+
+#card-tetsuju:not(.selected) {
+  border-color: #87CEEB;
+}
+
+.char-card:active {
+  transform: scale(0.96);
+}
+
+.char-card.selected {
+  border-color: #e05090;
+  background: rgba(255,220,235,0.8);
+}
+
+.char-canvas {
+  display: block;
+  margin: 0 auto 6px;
+}
+
+.char-name {
+  font-size: 13px;
+  font-weight: bold;
+  color: #2a2620;
+}
+</style>
+</head>
+
+<body>
+<div id="game-container">
+  <canvas id="gameCanvas"></canvas>
+
+  <div id="ui-layer">
+    <div class="hud">
+      <span id="score-display">SCORE: 0</span>
+      <span id="hearts-display">♡♡♡</span>
+    </div>
+  </div>
+
+  <div id="start-screen">
+    <div class="overlay-card">
+      <p class="overlay-caption" id="overlay-caption">🐾 ロセツシューティング 🐾</p>
+
+      <h1 class="overlay-message" id="overlay-message">SHOOT!</h1>
+      <p class="overlay-subhead" id="overlay-subhead">キャラクターを選んでね</p>
+
+      <div class="char-select-row" id="char-select-row">
+        <div class="char-card selected" id="card-rosetsu" onclick="selectChar('rosetsu')">
+          <img class="char-canvas" id="preview-rosetsu" src="assets/home-icon.png" width="100" height="100" style="object-fit:contain;">
+          <div class="char-name">ロセツ</div>
+        </div>
+        <div class="char-card" id="card-tetsuju" onclick="selectChar('tetsuju')">
+          <img class="char-canvas" id="preview-tetsuju" src="assets/tetsuju-icon.png" width="100" height="100" style="object-fit:contain;">
+          <div class="char-name">鉄二</div>
+        </div>
+      </div>
+
+      <div class="overlay-score-panel" id="overlay-score-panel">
+        <span class="overlay-star">♡</span>
+        <div class="overlay-score-text">
+          <span>Score</span>
+          <span class="overlay-score-value" id="overlay-score-value">0</span>
+        </div>
+        <span class="overlay-star">♡</span>
+      </div>
+
+      <button class="start-btn" id="start-btn">START!</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ===== Setup =====
+const canvas = document.getElementById('gameCanvas');
+const ctx = canvas.getContext('2d');
+const startScreenEl = document.getElementById('start-screen');
+const overlayMessageEl = document.getElementById('overlay-message');
+const overlaySubheadEl = document.getElementById('overlay-subhead');
+const overlayScorePanel = document.getElementById('overlay-score-panel');
+const overlayScoreValue = document.getElementById('overlay-score-value');
+const startBtn = document.getElementById('start-btn');
+const scoreEl = document.getElementById('score-display');
+const heartsEl = document.getElementById('hearts-display');
+const charSelectRow = document.getElementById('char-select-row');
+const overlayCaptionEl = document.getElementById('overlay-caption');
+
+// ===== Constants =====
+const COLORS = {
+  sky: '#FFD9E6',
+  text: '#333333'
+};
+const MAX_HEARTS = 3;
+const INVINCIBLE_DURATION_FRAMES = 60 * 4;
+const BIG_BANG_DURATION_FRAMES = 90;
+const BASEBALL_STORM_FRAMES = 90;
+const AUTO_SHOOT_INTERVAL = 15;
+const BULLET_SPEED = 10;
+const ENEMY_SPAWN_INTERVAL_MIN = 60;
+const ENEMY_SPAWN_INTERVAL_MAX = 120;
+const HIT_INVINCIBLE_FRAMES = 90; // 被弾後の一時無敵
+
+// ===== View =====
+const view = { w: 0, h: 0, dpr: 1 };
+let TILE_SIZE = 40;
+
+// ===== Game state =====
+let gameState = {
+  isRunning: false,
+  score: 0,
+  hearts: MAX_HEARTS,
+  selectedChar: 'rosetsu'
+};
+
+let player = {
+  x: 0, y: 0, w: 56, h: 50,
+  targetX: 0,
+  invincible: false,
+  invincibleTimer: 0,
+  hitTimer: 0
+};
+
+let bullets = [];
+let enemies = [];
+let specialItems = [];
+let particles = [];
+let bigBangTimer = 0;
+let baseballStorm = null;
+let frameCount = 0;
+let animationId = null;
+let nextEnemySpawn = 60;
+let nextItemSpawn = 300;
+let scrollOffset = 0;
+
+// ===== Resize =====
+function getViewportSize() {
+  const vv = window.visualViewport;
+  return {
+    w: Math.floor(vv?.width ?? window.innerWidth),
+    h: Math.floor(vv?.height ?? window.innerHeight)
+  };
+}
+
+function resize() {
+  const { w, h } = getViewportSize();
+  view.w = w;
+  view.h = h;
+  view.dpr = window.devicePixelRatio || 1;
+  canvas.style.width = w + 'px';
+  canvas.style.height = h + 'px';
+  canvas.width = Math.floor(w * view.dpr);
+  canvas.height = Math.floor(h * view.dpr);
+  ctx.setTransform(view.dpr, 0, 0, view.dpr, 0, 0);
+  TILE_SIZE = Math.max(24, Math.floor(view.h / 15));
+}
+window.addEventListener('resize', resize);
+if (window.visualViewport) window.visualViewport.addEventListener('resize', resize);
+resize();
+
+// ===== Character select =====
+let selectedChar = 'rosetsu';
+
+function selectChar(c) {
+  selectedChar = c;
+  document.getElementById('card-rosetsu').classList.toggle('selected', c === 'rosetsu');
+  document.getElementById('card-tetsuju').classList.toggle('selected', c === 'tetsuju');
+}
+
+// Draw preview canvases
+// プレビューは両方img要素のため描画処理不要
+
+// ===== Drawing: Chihuahua (ロセツ) — ported from pyon-pyon-rosetsu drawPlayer =====
+// Call with ctx translated to (centerX, bottomY) of player hitbox
+function drawChihuahua(c, s, frame) {
+  // Colors (Rosetsu)
+  const furColor    = '#FFFFFF';
+  const furDark     = '#DDDDDD';
+  const earInner    = '#FFC0CB';
+  const eyeColor    = '#000000';
+  const noseColor   = '#ff7aa2';
+  const outfitColor = '#C62828';
+  const outfitDark  = '#B71C1C';
+  const stripe1     = '#FFFFFF';
+  const stripe2     = '#1565C0';
+
+  // Gentle float bob
+  const bob = Math.sin(frame / 15) * 2;
+
+  // Running leg animation
+  const runFrame = Math.floor(frame / 4) % 4;
+  let legFL = 0, legFR = 0, legBL = 0, legBR = 0;
+  if (runFrame === 1)      { legFL=-2*s; legFR= 2*s; legBL= 2*s; legBR=-2*s; }
+  else if (runFrame === 3) { legFL= 2*s; legFR=-2*s; legBL=-2*s; legBR= 2*s; }
+
+  // Tail wag
+  const wag = Math.sin(frame / 6) * 1.5 * s;
+  c.fillStyle = furColor;
+  c.beginPath();
+  const tailBaseX = -10*s;
+  const tailBaseY = -12*s + bob;
+  c.arc(tailBaseX + wag * 0.2, tailBaseY, 4*s, 0, Math.PI*2);
+  c.arc(tailBaseX - 3*s + wag * 0.4, tailBaseY - 3*s - wag * 0.2, 5*s, 0, Math.PI*2);
+  c.arc(tailBaseX + 2*s + wag, tailBaseY - 4*s + wag * 0.1, 4*s, 0, Math.PI*2);
+  c.fill();
+
+  // Back legs
+  c.fillStyle = furDark;
+  c.fillRect(-8*s + legBL, -6*s + bob, 3*s, 6*s);
+  c.fillRect( 4*s + legFL, -6*s + bob, 3*s, 6*s);
+
+  // Body (outfit)
+  c.fillStyle = outfitColor;
+  c.beginPath();
+  if (c.roundRect) {
+    c.roundRect(-10*s, -16*s + bob, 20*s, 12*s, 4*s);
+  } else {
+    c.rect(-10*s, -16*s + bob, 20*s, 12*s);
+  }
+  c.fill();
+
+  // Stripes on outfit
+  c.fillStyle = stripe1;
+  c.fillRect(-8*s, -14*s + bob, 16*s, 3*s);
+  c.fillStyle = stripe2;
+  c.fillRect(-8*s,  -9*s + bob, 16*s, 3*s);
+
+  // Outfit accent (right side)
+  c.fillStyle = outfitDark;
+  c.fillRect(4*s, -16*s + bob, 4*s, 8*s);
+
+  // Front legs
+  c.fillStyle = furColor;
+  c.fillRect(-10*s + legBR, -6*s + bob, 3*s, 6*s);
+  c.fillRect(  6*s + legFR, -6*s + bob, 3*s, 6*s);
+
+  // Head (offset right, like original)
+  const headX = 6*s;
+  const headY = -20*s + bob;
+
+  // Left ear
+  c.fillStyle = furColor;
+  c.beginPath();
+  c.moveTo(headX - 2*s, headY);
+  c.lineTo(headX - 6.5*s, headY - 13*s);
+  c.lineTo(headX + 2.8*s, headY - 2.4*s);
+  c.fill();
+
+  // Right ear
+  c.beginPath();
+  c.moveTo(headX + 2*s, headY);
+  c.lineTo(headX + 7*s, headY - 13*s);
+  c.lineTo(headX + 5.2*s, headY);
+  c.fill();
+
+  // Left ear inner
+  c.fillStyle = earInner;
+  c.beginPath();
+  c.moveTo(headX - 2*s,   headY -  1*s);
+  c.lineTo(headX - 5.2*s, headY - 10.5*s);
+  c.lineTo(headX + 1.8*s, headY -  2.8*s);
+  c.fill();
+
+  // Right ear inner
+  c.beginPath();
+  c.moveTo(headX + 2.5*s, headY -  1*s);
+  c.lineTo(headX + 6*s,   headY - 10.5*s);
+  c.lineTo(headX + 5*s,   headY -  1*s);
+  c.fill();
+
+  // Head circle
+  c.fillStyle = furColor;
+  c.beginPath();
+  c.arc(headX, headY, 7*s, 0, Math.PI*2);
+  c.fill();
+
+  // Cheek
+  c.beginPath();
+  c.arc(headX + 5*s, headY + 1*s, 3.5*s, 0, Math.PI*2);
+  c.fill();
+
+  // Eye (black)
+  c.fillStyle = eyeColor;
+  c.beginPath();
+  c.arc(headX + 2*s, headY - 1*s, 2*s, 0, Math.PI*2);
+  c.fill();
+
+  // Eye shine
+  c.fillStyle = '#FFFFFF';
+  c.beginPath();
+  c.arc(headX + 2.5*s, headY - 1.5*s, 0.6*s, 0, Math.PI*2);
+  c.fill();
+
+  // Nose
+  c.fillStyle = noseColor;
+  c.beginPath();
+  c.arc(headX + 7.5*s, headY + 0.5*s, 1*s, 0, Math.PI*2);
+  c.fill();
+}
+
+// ===== Drawing: Tetsuju (鉄二) — ported from pyon-pyon-rosetsu drawRabbit =====
+// Call with ctx translated to (centerX, bottomY) of player hitbox
+function drawTetsuju(c, size, frame) {
+  const arcMin = 0.5;
+  // Shift up so bottom of body sits at y=0
+  const yOff = -size * 0.55;
+
+  c.fillStyle = '#f5deb3';
+  c.strokeStyle = 'black';
+  c.lineWidth = Math.max(1.5, size * 0.025);
+
+  // Body
+  c.beginPath();
+  c.ellipse(0, size * 0.25 + yOff, size * 0.5, size * 0.3, 0, 0, Math.PI * 2);
+  c.fill();
+  c.stroke();
+
+  // Head
+  c.beginPath();
+  c.ellipse(0, -size * 0.1 + yOff, size * 0.4, size * 0.28, 0, 0, Math.PI * 2);
+  c.fill();
+  c.stroke();
+
+  // Left ear
+  c.beginPath();
+  c.ellipse(-size * 0.35, -size * 0.1 + yOff, size * 0.16, size * 0.14, 0, 0, Math.PI * 2);
+  c.fill();
+  c.stroke();
+
+  // Right ear
+  c.beginPath();
+  c.ellipse(size * 0.35, -size * 0.1 + yOff, size * 0.16, size * 0.14, 0, 0, Math.PI * 2);
+  c.fill();
+  c.stroke();
+
+  // Muzzle dark marking
+  c.fillStyle = '#3d3532';
+  c.beginPath();
+  c.ellipse(0, 0 + yOff, size * 0.25, size * 0.1, 0, 0, Math.PI * 2);
+  c.fill();
+
+  // Eyes and nose
+  c.fillStyle = 'black';
+  c.beginPath();
+  c.arc(-size * 0.15, -size * 0.12 + yOff, Math.max(arcMin, size * 0.05), 0, Math.PI * 2);
+  c.arc( size * 0.15, -size * 0.12 + yOff, Math.max(arcMin, size * 0.05), 0, Math.PI * 2);
+  c.arc(0, size * 0.02 + yOff, Math.max(arcMin, size * 0.04), 0, Math.PI * 2);
+  c.fill();
+}
+
+// ===== Drawing: Player =====
+function drawPlayer(ctx) {
+  const s = TILE_SIZE * 0.055;
+  const centerX = player.x + player.w / 2;
+  const bottomY  = player.y + player.h;
+
+  // Invincible rainbow aura (from original)
+  if (player.invincible && player.hitTimer <= 0) {
+    ctx.save();
+    ctx.translate(centerX, bottomY - player.h * 0.5);
+    const pulse = 16 + Math.sin(frameCount / 5) * 8;
+    const auraW = player.w * 2.2 + pulse;
+    const auraH = player.h * 2.2 + pulse;
+    const maxR = Math.max(auraW, auraH);
+    const grad = ctx.createRadialGradient(0, 0, player.w * 0.2, 0, 0, maxR);
+    const hueOffset = (frameCount * 5) % 360;
+    [0, 45, 90, 150, 210, 270, 330].forEach((hue, idx, arr) => {
+      const stop = idx / (arr.length - 1);
+      const alpha = 0.55 - stop * 0.4;
+      grad.addColorStop(stop, `hsla(${(hue + hueOffset) % 360}, 85%, 70%, ${Math.max(alpha, 0)})`);
+    });
+    grad.addColorStop(1, 'hsla(0,0%,100%,0)');
+    ctx.fillStyle = grad;
+    ctx.beginPath();
+    ctx.ellipse(0, 0, auraW, auraH, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
+  }
+
+  // Blink when hit
+  if (player.hitTimer > 0 && Math.floor(frameCount / 4) % 2 === 0) return;
+
+  ctx.save();
+  ctx.translate(centerX, bottomY);
+  if (selectedChar === 'tetsuju') {
+    drawTetsuju(ctx, TILE_SIZE * 1.4, frameCount);
+  } else {
+    drawChihuahua(ctx, s, frameCount);
+  }
+  ctx.restore();
+}
+
+// ===== Drawing: Bullet =====
+function drawBullets(ctx) {
+  bullets.forEach(b => {
+    ctx.save();
+    // glow
+    const grad = ctx.createRadialGradient(b.x, b.y, 0, b.x, b.y, b.r * 2.5);
+    grad.addColorStop(0, 'rgba(255,255,150,0.9)');
+    grad.addColorStop(0.4, 'rgba(255,200,50,0.5)');
+    grad.addColorStop(1, 'rgba(255,200,50,0)');
+    ctx.fillStyle = grad;
+    ctx.beginPath();
+    ctx.arc(b.x, b.y, b.r * 2.5, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.fillStyle = '#FFF176';
+    ctx.beginPath();
+    ctx.arc(b.x, b.y, b.r, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
+  });
+}
+
+// ===== Drawing: Enemies =====
+function drawOnigiri(ctx, x, y, size) {
+  // rice body
+  ctx.fillStyle = '#fffdf5';
+  ctx.strokeStyle = '#e5ddd2';
+  ctx.lineWidth = 1.5;
+  ctx.beginPath();
+  ctx.moveTo(x, y - size * 0.55);
+  ctx.quadraticCurveTo(x + size * 0.55, y - size * 0.3, x + size * 0.5, y + size * 0.4);
+  ctx.lineTo(x - size * 0.5, y + size * 0.4);
+  ctx.quadraticCurveTo(x - size * 0.55, y - size * 0.3, x, y - size * 0.55);
+  ctx.closePath();
+  ctx.fill();
+  ctx.stroke();
+  // nori
+  ctx.fillStyle = '#1f3b2d';
+  ctx.fillRect(x - size * 0.4, y + size * 0.05, size * 0.8, size * 0.32);
+}
+
+function drawIchigo(ctx, x, y, size) {
+  // body
+  ctx.fillStyle = '#FF6B6B';
+  ctx.beginPath();
+  ctx.moveTo(x, y + size * 0.5);
+  ctx.quadraticCurveTo(x + size * 0.55, y + size * 0.2, x + size * 0.45, y - size * 0.1);
+  ctx.quadraticCurveTo(x + size * 0.3, y - size * 0.45, x, y - size * 0.3);
+  ctx.quadraticCurveTo(x - size * 0.3, y - size * 0.45, x - size * 0.45, y - size * 0.1);
+  ctx.quadraticCurveTo(x - size * 0.55, y + size * 0.2, x, y + size * 0.5);
+  ctx.closePath();
+  ctx.fill();
+  // seeds
+  ctx.fillStyle = '#fff0f0';
+  [[0, -0.1], [0.2, 0.1], [-0.2, 0.1], [0, 0.3]].forEach(([dx, dy]) => {
+    ctx.beginPath();
+    ctx.ellipse(x + dx * size, y + dy * size, size * 0.06, size * 0.1, 0, 0, Math.PI*2);
+    ctx.fill();
+  });
+  // heta
+  ctx.fillStyle = '#3a9a3a';
+  ctx.beginPath();
+  ctx.moveTo(x, y - size * 0.3);
+  ctx.bezierCurveTo(x - size*0.1, y - size*0.55, x - size*0.3, y - size*0.5, x - size*0.25, y - size*0.35);
+  ctx.bezierCurveTo(x - size*0.15, y - size*0.55, x, y - size*0.6, x, y - size*0.35);
+  ctx.bezierCurveTo(x + size*0.15, y - size*0.55, x + size*0.3, y - size*0.5, x + size*0.25, y - size*0.35);
+  ctx.fill();
+}
+
+function drawDonut(ctx, x, y, size) {
+  // outer
+  ctx.fillStyle = '#F5CBA7';
+  ctx.beginPath();
+  ctx.arc(x, y, size * 0.48, 0, Math.PI*2);
+  ctx.fill();
+  // icing
+  ctx.fillStyle = '#D35400';
+  ctx.beginPath();
+  ctx.arc(x, y, size * 0.42, 0, Math.PI*2);
+  ctx.fill();
+  // sprinkles
+  const sprinkleColors = ['#FF6B6B','#FFD93D','#6BCB77','#4D96FF','#FF6EFF'];
+  for (let i = 0; i < 6; i++) {
+    const angle = (i / 6) * Math.PI * 2;
+    const sr = size * 0.28;
+    const sx = x + Math.cos(angle) * sr;
+    const sy = y + Math.sin(angle) * sr;
+    ctx.fillStyle = sprinkleColors[i % sprinkleColors.length];
+    ctx.save();
+    ctx.translate(sx, sy);
+    ctx.rotate(angle);
+    ctx.fillRect(-size*0.06, -size*0.015, size*0.12, size*0.03);
+    ctx.restore();
+  }
+  // hole
+  ctx.fillStyle = '#FFD9E6';
+  ctx.beginPath();
+  ctx.arc(x, y, size * 0.18, 0, Math.PI*2);
+  ctx.fill();
+}
+
+function drawUsagi(ctx, x, y, size) {
+  // body
+  ctx.fillStyle = '#f5deb3';
+  ctx.strokeStyle = '#b89060';
+  ctx.lineWidth = 1.5;
+  ctx.beginPath();
+  ctx.ellipse(x, y + size*0.1, size*0.35, size*0.28, 0, 0, Math.PI*2);
+  ctx.fill();
+  ctx.stroke();
+  // head
+  ctx.beginPath();
+  ctx.ellipse(x, y - size*0.14, size*0.28, size*0.22, 0, 0, Math.PI*2);
+  ctx.fill();
+  ctx.stroke();
+  // ears
+  ctx.fillStyle = '#f5deb3';
+  ctx.beginPath();
+  ctx.ellipse(x - size*0.18, y - size*0.42, size*0.09, size*0.18, -0.2, 0, Math.PI*2);
+  ctx.fill();
+  ctx.stroke();
+  ctx.beginPath();
+  ctx.ellipse(x + size*0.18, y - size*0.42, size*0.09, size*0.18, 0.2, 0, Math.PI*2);
+  ctx.fill();
+  ctx.stroke();
+  // eyes
+  ctx.fillStyle = '#3d3532';
+  ctx.beginPath();
+  ctx.arc(x - size*0.1, y - size*0.17, size*0.04, 0, Math.PI*2);
+  ctx.arc(x + size*0.1, y - size*0.17, size*0.04, 0, Math.PI*2);
+  ctx.fill();
+  // nose
+  ctx.fillStyle = '#cc7070';
+  ctx.beginPath();
+  ctx.arc(x, y - size*0.08, size*0.03, 0, Math.PI*2);
+  ctx.fill();
+  // star marker
+  ctx.fillStyle = '#FFD700';
+  ctx.font = `${Math.floor(size*0.3)}px sans-serif`;
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText('★', x + size*0.32, y - size*0.32);
+}
+
+function drawEnemies(ctx) {
+  enemies.forEach(e => {
+    ctx.save();
+    if (e.flashTimer > 0 && Math.floor(e.flashTimer / 3) % 2 === 0) {
+      ctx.globalAlpha = 0.4;
+    }
+    if (e.type === 'onigiri') drawOnigiri(ctx, e.x, e.y, e.size);
+    else if (e.type === 'ichigo') drawIchigo(ctx, e.x, e.y, e.size);
+    else if (e.type === 'donut') drawDonut(ctx, e.x, e.y, e.size);
+    else if (e.type === 'usagi') drawUsagi(ctx, e.x, e.y, e.size);
+    ctx.restore();
+  });
+}
+
+// ===== Drawing: Special items =====
+function drawSpecialItems(ctx) {
+  specialItems.forEach(item => {
+    ctx.save();
+    ctx.translate(item.x, item.y);
+    const pulse = 1 + Math.sin(frameCount / 10) * 0.1;
+    ctx.scale(pulse, pulse);
+    if (item.type === 'invincible') {
+      // Star shape
+      const r = item.r;
+      ctx.fillStyle = '#FFD700';
+      ctx.strokeStyle = '#FF8C00';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      for (let i = 0; i < 10; i++) {
+        const angle = (Math.PI * 2 * i) / 10 - Math.PI / 2;
+        const rad = i % 2 === 0 ? r : r * 0.45;
+        if (i === 0) ctx.moveTo(Math.cos(angle)*rad, Math.sin(angle)*rad);
+        else ctx.lineTo(Math.cos(angle)*rad, Math.sin(angle)*rad);
+      }
+      ctx.closePath();
+      ctx.fill();
+      ctx.stroke();
+    } else if (item.type === 'bigbang') {
+      ctx.fillStyle = '#FF4500';
+      ctx.strokeStyle = '#FF0000';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.arc(0, 0, item.r, 0, Math.PI*2);
+      ctx.fill();
+      ctx.stroke();
+      ctx.fillStyle = '#FFFFFF';
+      ctx.font = `bold ${Math.floor(item.r)}px sans-serif`;
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText('💥', 0, 1);
+    } else if (item.type === 'baseball') {
+      ctx.fillStyle = '#FFFFFF';
+      ctx.beginPath();
+      ctx.arc(0, 0, item.r, 0, Math.PI*2);
+      ctx.fill();
+      ctx.strokeStyle = '#c73b3b';
+      ctx.lineWidth = Math.max(1, item.r * 0.18);
+      ctx.beginPath();
+      ctx.arc(-item.r*0.3, 0, item.r*0.85, -0.6, 0.6);
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.arc(item.r*0.3, 0, item.r*0.85, Math.PI-0.6, Math.PI+0.6);
+      ctx.stroke();
+    }
+    ctx.restore();
+  });
+}
+
+// ===== Drawing: Particles =====
+function drawParticles(ctx) {
+  particles = particles.filter(p => p.life > 0);
+  particles.forEach(p => {
+    ctx.save();
+    ctx.globalAlpha = p.life / p.maxLife;
+    ctx.fillStyle = p.color;
+    ctx.beginPath();
+    ctx.arc(p.x, p.y, p.r, 0, Math.PI*2);
+    ctx.fill();
+    ctx.restore();
+    p.x += p.vx;
+    p.y += p.vy;
+    p.vy += 0.15;
+    p.life--;
+  });
+}
+
+function spawnParticles(x, y, color, count = 8) {
+  for (let i = 0; i < count; i++) {
+    const angle = (Math.PI * 2 * i) / count + Math.random() * 0.5;
+    const speed = 2 + Math.random() * 3;
+    particles.push({
+      x, y,
+      vx: Math.cos(angle) * speed,
+      vy: Math.sin(angle) * speed - 2,
+      r: 3 + Math.random() * 4,
+      color,
+      life: 30 + Math.floor(Math.random() * 20),
+      maxLife: 50
+    });
+  }
+}
+
+// ===== Drawing: Background =====
+function drawBackground(ctx) {
+  ctx.fillStyle = COLORS.sky;
+  ctx.fillRect(0, 0, view.w, view.h);
+
+  // scrolling clouds
+  ctx.fillStyle = 'rgba(255, 255, 255, 0.55)';
+  const cloud = (cx, cy, s) => {
+    ctx.beginPath();
+    ctx.arc(cx, cy, 28*s, 0, Math.PI*2);
+    ctx.arc(cx+38*s, cy+8*s, 36*s, 0, Math.PI*2);
+    ctx.arc(cx-36*s, cy+8*s, 36*s, 0, Math.PI*2);
+    ctx.fill();
+  };
+  const offset = (scrollOffset * 0.3) % (view.w + 400);
+  for (let i = 0; i < 4; i++) {
+    let cx = (200 + i * 350 - offset);
+    while (cx > view.w + 200) cx -= (view.w + 400);
+    cloud(cx, 100 + (i % 2) * 60, 0.9 + (i % 2) * 0.2);
+  }
+}
+
+// ===== Drawing: Big Bang =====
+function drawBigBangEffect(ctx, t) {
+  const progress = 1 - t;
+  const cx = view.w * 0.5;
+  const cy = view.h * 0.5;
+  const maxR = Math.max(view.w, view.h) * (0.5 + progress * 1.6);
+  const fade = Math.min(1, t);
+  ctx.save();
+  ctx.globalCompositeOperation = 'screen';
+  const core = ctx.createRadialGradient(cx, cy, 0, cx, cy, maxR * 0.6);
+  core.addColorStop(0, `rgba(255,255,255,${1.0*fade})`);
+  core.addColorStop(0.35, `rgba(255,245,210,${0.9*fade})`);
+  core.addColorStop(1, 'rgba(255,255,255,0)');
+  ctx.fillStyle = core;
+  ctx.fillRect(0, 0, view.w, view.h);
+  const halo = ctx.createRadialGradient(cx, cy, maxR*0.2, cx, cy, maxR);
+  halo.addColorStop(0, `rgba(255,255,255,${0.6*fade})`);
+  halo.addColorStop(0.7, `rgba(200,240,255,${0.35*fade})`);
+  halo.addColorStop(1, 'rgba(255,255,255,0)');
+  ctx.fillStyle = halo;
+  ctx.fillRect(0, 0, view.w, view.h);
+  ctx.restore();
+}
+
+// ===== Baseball storm =====
+function triggerBaseballStorm() {
+  const count = Math.max(60, Math.min(160, Math.floor((view.w * view.h) / 7000)));
+  baseballStorm = { timer: BASEBALL_STORM_FRAMES, balls: [] };
+  for (let i = 0; i < count; i++) {
+    const r = 10 + Math.random() * 12;
+    baseballStorm.balls.push({
+      x: Math.random() * view.w,
+      y: Math.random() * view.h,
+      r,
+      vx: (Math.random() - 0.5) * 3,
+      vy: 2 + Math.random() * 4,
+      spin: Math.random() * Math.PI
+    });
+  }
+}
+
+function drawBaseballStorm(ctx) {
+  if (!baseballStorm) return;
+  baseballStorm.balls.forEach(ball => {
+    ball.x += ball.vx;
+    ball.y += ball.vy;
+    ball.spin += 0.05;
+    if (ball.x < -ball.r) ball.x = view.w + ball.r;
+    if (ball.x > view.w + ball.r) ball.x = -ball.r;
+    if (ball.y > view.h + ball.r) ball.y = -ball.r;
+    // draw
+    ctx.save();
+    ctx.translate(ball.x, ball.y);
+    ctx.rotate(ball.spin);
+    ctx.fillStyle = '#ffffff';
+    ctx.beginPath();
+    ctx.arc(0, 0, ball.r, 0, Math.PI*2);
+    ctx.fill();
+    ctx.strokeStyle = '#c73b3b';
+    ctx.lineWidth = Math.max(1, ball.r * 0.18);
+    ctx.beginPath();
+    ctx.arc(-ball.r*0.3, 0, ball.r*0.85, -0.6, 0.6);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.arc(ball.r*0.3, 0, ball.r*0.85, Math.PI-0.6, Math.PI+0.6);
+    ctx.stroke();
+    ctx.restore();
+
+    // damage enemies
+    enemies.forEach(e => {
+      if (e.hp <= 0) return;
+      const dx = ball.x - e.x;
+      const dy = ball.y - e.y;
+      if (Math.sqrt(dx*dx + dy*dy) < ball.r + e.size * 0.5) {
+        if (!e._bbHit) {
+          e.hp--;
+          e._bbHit = true;
+          setTimeout(() => { e._bbHit = false; }, 200);
+          if (e.hp <= 0) killEnemy(e);
+        }
+      }
+    });
+  });
+  baseballStorm.timer--;
+  if (baseballStorm.timer <= 0) baseballStorm = null;
+}
+
+// ===== HUD =====
+function drawHUD() {
+  scoreEl.innerText = `SCORE: ${gameState.score}`;
+  const full = '♥';
+  const empty = '♡';
+  let s = '';
+  for (let i = 0; i < MAX_HEARTS; i++) s += (i < gameState.hearts ? full : empty);
+  heartsEl.innerText = s;
+}
+
+// ===== Spawning =====
+function spawnEnemy() {
+  const types = ['onigiri', 'ichigo', 'donut'];
+  // occasionally spawn usagi
+  const roll = Math.random();
+  let type;
+  if (roll < 0.08) type = 'usagi';
+  else type = types[Math.floor(Math.random() * types.length)];
+
+  const size = 38 + Math.random() * 20;
+  const x = size + Math.random() * (view.w - size * 2);
+
+  const patterns = {
+    onigiri: { vx: 0, vy: 2.5 + Math.random(), sinAmp: 0, sinFreq: 0 },
+    ichigo:  { vx: 0, vy: 2 + Math.random() * 0.5, sinAmp: 60, sinFreq: 0.04 },
+    donut:   { vx: 0, vy: 1.5, sinAmp: 0, sinFreq: 0, accel: 0.03 },
+    usagi:   { vx: (Math.random() > 0.5 ? 1 : -1) * (1.5 + Math.random()), vy: 1.5, sinAmp: 0, sinFreq: 0 }
+  };
+
+  const pts = { onigiri: 100, ichigo: 150, donut: 200, usagi: 0 };
+  const p = patterns[type];
+  const hp = type === 'usagi' ? 3 : (type === 'donut' ? 3 : 1);
+
+  enemies.push({
+    type, x, y: -size,
+    baseX: x,
+    size,
+    vx: p.vx, vy: p.vy,
+    sinAmp: p.sinAmp || 0,
+    sinFreq: p.sinFreq || 0,
+    sinPhase: Math.random() * Math.PI * 2,
+    accel: p.accel || 0,
+    hp,
+    maxHp: hp,
+    flashTimer: 0,
+    points: pts[type]
+  });
+}
+
+function spawnSpecialItem() {
+  const types = ['invincible', 'bigbang', 'baseball'];
+  const type = types[Math.floor(Math.random() * types.length)];
+  const r = 18;
+  const x = r + Math.random() * (view.w - r * 2);
+  specialItems.push({
+    type, x, y: -r, r, vy: 1.8
+  });
+}
+
+// ===== Kill enemy =====
+function killEnemy(e) {
+  e.hp = 0;
+  spawnParticles(e.x, e.y, e.type === 'ichigo' ? '#FF6B6B' : e.type === 'donut' ? '#D35400' : '#fffdf5', 10);
+  if (e.type !== 'usagi') {
+    addScore(e.points * (player.invincible ? 1.2 : 1));
+  }
+}
+
+function addScore(pts) {
+  gameState.score += Math.floor(pts);
+}
+
+// ===== Collision =====
+function rectsOverlap(ax, ay, aw, ah, bx, by, bw, bh) {
+  return ax < bx + bw && ax + aw > bx && ay < by + bh && ay + ah > by;
+}
+
+function circleRectOverlap(cx, cy, cr, rx, ry, rw, rh) {
+  const nearX = Math.max(rx, Math.min(cx, rx + rw));
+  const nearY = Math.max(ry, Math.min(cy, ry + rh));
+  const dx = cx - nearX;
+  const dy = cy - nearY;
+  return dx*dx + dy*dy < cr*cr;
+}
+
+// ===== Update =====
+function updateGame() {
+  scrollOffset += 2;
+
+  // smooth player movement
+  player.x += (player.targetX - player.x) * 0.18;
+  player.x = Math.max(0, Math.min(view.w - player.w, player.x));
+
+  // clamp targetX
+  player.targetX = Math.max(0, Math.min(view.w - player.w, player.targetX));
+
+  // auto shoot
+  if (frameCount % AUTO_SHOOT_INTERVAL === 0) {
+    bullets.push({
+      x: player.x + player.w / 2,
+      y: player.y,
+      vy: -BULLET_SPEED,
+      r: 6
+    });
+  }
+
+  // update bullets
+  bullets = bullets.filter(b => {
+    b.y += b.vy;
+    return b.y > -b.r;
+  });
+
+  // spawn enemies
+  nextEnemySpawn--;
+  if (nextEnemySpawn <= 0) {
+    spawnEnemy();
+    nextEnemySpawn = ENEMY_SPAWN_INTERVAL_MIN + Math.floor(Math.random() * (ENEMY_SPAWN_INTERVAL_MAX - ENEMY_SPAWN_INTERVAL_MIN));
+  }
+
+  // spawn special items
+  nextItemSpawn--;
+  if (nextItemSpawn <= 0) {
+    spawnSpecialItem();
+    nextItemSpawn = 400 + Math.floor(Math.random() * 400);
+  }
+
+  // update enemies
+  enemies.forEach(e => {
+    e.sinPhase += e.sinFreq;
+    e.vy += e.accel;
+    e.x = e.baseX + Math.sin(e.sinPhase) * e.sinAmp;
+    e.y += e.vy;
+    if (e.type === 'usagi') e.baseX += e.vx;
+    if (e.flashTimer > 0) e.flashTimer--;
+  });
+
+  // update special items
+  specialItems.forEach(item => { item.y += item.vy; });
+
+  // bullet vs enemy
+  bullets = bullets.filter(b => {
+    let hit = false;
+    enemies.forEach(e => {
+      if (e.hp <= 0) return;
+      if (circleRectOverlap(b.x, b.y, b.r, e.x - e.size*0.5, e.y - e.size*0.5, e.size, e.size)) {
+        hit = true;
+        e.hp--;
+        e.flashTimer = 12;
+        if (e.hp <= 0) killEnemy(e);
+      }
+    });
+    return !hit;
+  });
+
+  // usagi special: trigger bigbang on death
+  enemies = enemies.filter(e => {
+    if (e.hp <= 0) return false;
+    if (e.y > view.h + e.size) return false; // off screen
+    return true;
+  });
+
+  // enemy vs player
+  if (player.hitTimer <= 0) {
+    enemies.forEach(e => {
+      if (e.hp <= 0) return;
+      if (circleRectOverlap(e.x, e.y, e.size * 0.5, player.x, player.y, player.w, player.h)) {
+        if (player.invincible) {
+          killEnemy(e);
+          e.hp = 0;
+        } else {
+          takeDamage();
+        }
+      }
+    });
+  }
+
+  // special item vs player
+  specialItems = specialItems.filter(item => {
+    if (item.y > view.h + item.r) return false;
+    if (circleRectOverlap(item.x, item.y, item.r, player.x, player.y, player.w, player.h)) {
+      collectItem(item.type);
+      return false;
+    }
+    return true;
+  });
+
+  // distance score
+  if (frameCount % 60 === 0) addScore(1);
+
+  // invincible timer
+  if (player.invincible) {
+    player.invincibleTimer--;
+    if (player.invincibleTimer <= 0) {
+      player.invincible = false;
+      player.invincibleTimer = 0;
+    }
+  }
+
+  if (player.hitTimer > 0) player.hitTimer--;
+
+  // big bang: destroy all enemies
+  if (bigBangTimer === BIG_BANG_DURATION_FRAMES) {
+    enemies.forEach(e => { e.hp = 0; killEnemy(e); });
+    enemies = [];
+  }
+  if (bigBangTimer > 0) bigBangTimer--;
+}
+
+function takeDamage() {
+  if (player.hitTimer > 0) return;
+  gameState.hearts--;
+  player.hitTimer = HIT_INVINCIBLE_FRAMES;
+  if (gameState.hearts <= 0) {
+    gameState.hearts = 0;
+    gameOver();
+  }
+}
+
+function collectItem(type) {
+  if (type === 'invincible') {
+    player.invincible = true;
+    player.invincibleTimer = INVINCIBLE_DURATION_FRAMES;
+    spawnParticles(player.x + player.w/2, player.y, '#FFD700', 12);
+  } else if (type === 'bigbang') {
+    bigBangTimer = BIG_BANG_DURATION_FRAMES;
+    spawnParticles(player.x + player.w/2, player.y, '#FF4500', 16);
+  } else if (type === 'baseball') {
+    triggerBaseballStorm();
+    spawnParticles(player.x + player.w/2, player.y, '#ffffff', 12);
+  }
+}
+
+// ===== Game over =====
+function gameOver() {
+  gameState.isRunning = false;
+  const finalScore = gameState.score;
+  setTimeout(() => {
+    setOverlayState('gameover', finalScore);
+    startScreenEl.style.display = 'flex';
+  }, 1200);
+}
+
+// ===== Overlay =====
+function setOverlayState(state, scoreValue = 0) {
+  charSelectRow.style.display = state === 'start' ? 'flex' : 'none';
+  if (state === 'start') {
+    overlayMessageEl.innerText = 'SHOOT!';
+    overlaySubheadEl.innerText = 'キャラクターを選んでね';
+    overlayCaptionEl.innerText = '🐾 ロセツシューティング 🐾';
+    overlayScorePanel.classList.remove('visible');
+    startBtn.innerText = 'START!';
+  } else if (state === 'gameover') {
+    overlayMessageEl.innerText = 'GAME OVER';
+    overlaySubheadEl.innerText = 'クゥ〜ン、、';
+    overlayCaptionEl.innerText = '🐾 ロセツシューティング 🐾';
+    overlayScoreValue.innerText = scoreValue;
+    overlayScorePanel.classList.add('visible');
+    startBtn.innerText = 'もう一度チャレンジする';
+  }
+}
+
+// ===== Init =====
+function init() {
+  resize();
+  selectedChar = gameState.selectedChar = document.getElementById('card-tetsuju').classList.contains('selected') ? 'tetsuju' : 'rosetsu';
+
+  bullets = [];
+  enemies = [];
+  specialItems = [];
+  particles = [];
+  bigBangTimer = 0;
+  baseballStorm = null;
+  frameCount = 0;
+  scrollOffset = 0;
+  nextEnemySpawn = 60;
+  nextItemSpawn = 300;
+
+  gameState.score = 0;
+  gameState.hearts = MAX_HEARTS;
+  gameState.isRunning = true;
+
+  player.w = Math.round(TILE_SIZE * 1.3);
+  player.h = Math.round(TILE_SIZE * 1.1);
+  player.x = view.w / 2 - player.w / 2;
+  player.y = view.h * 0.75;
+  player.targetX = player.x;
+  player.invincible = false;
+  player.invincibleTimer = 0;
+  player.hitTimer = 0;
+
+  startScreenEl.style.display = 'none';
+
+  if (animationId) cancelAnimationFrame(animationId);
+  gameLoop();
+}
+
+// ===== Game loop =====
+function gameLoop() {
+  if (!gameState.isRunning) return;
+
+  ctx.clearRect(0, 0, view.w, view.h);
+
+  drawBackground(ctx);
+  updateGame();
+  drawEnemies(ctx);
+  drawSpecialItems(ctx);
+  drawBullets(ctx);
+  drawPlayer(ctx);
+  drawParticles(ctx);
+  if (bigBangTimer > 0) {
+    drawBigBangEffect(ctx, bigBangTimer / BIG_BANG_DURATION_FRAMES);
+  }
+  drawBaseballStorm(ctx);
+  drawHUD();
+
+  frameCount++;
+  animationId = requestAnimationFrame(gameLoop);
+}
+
+// ===== Input =====
+const container = document.getElementById('game-container');
+
+function handleTouchMove(e) {
+  if (!gameState.isRunning) return;
+  e.preventDefault();
+  const touch = e.touches[0];
+  player.targetX = touch.clientX - player.w / 2;
+}
+
+function handleTouchStart(e) {
+  if (!gameState.isRunning) return;
+  // Don't capture touches on overlay
+  if (startScreenEl.style.display !== 'none') return;
+  e.preventDefault();
+  const touch = e.touches[0];
+  player.targetX = touch.clientX - player.w / 2;
+}
+
+function handleMouseMove(e) {
+  if (!gameState.isRunning) return;
+  player.targetX = e.clientX - player.w / 2;
+}
+
+canvas.addEventListener('touchmove', handleTouchMove, { passive: false });
+canvas.addEventListener('touchstart', handleTouchStart, { passive: false });
+canvas.addEventListener('mousemove', handleMouseMove);
+
+// keyboard
+window.addEventListener('keydown', e => {
+  if (!gameState.isRunning) return;
+  if (e.key === 'ArrowLeft') player.targetX -= 30;
+  if (e.key === 'ArrowRight') player.targetX += 30;
+});
+
+// Start button
+startBtn.addEventListener('click', (e) => { e.preventDefault(); init(); });
+startBtn.addEventListener('touchstart', (e) => { e.preventDefault(); init(); });
+
+// Initial state
+setOverlayState('start');
+
+</script>
+</body>
+</html>
