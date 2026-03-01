@@ -3,10 +3,10 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-<title>ロセツシューティング</title>
+<title>わんわんシューティング</title>
 <link rel="icon" type="image/png" href="assets/home-icon.png">
 <link rel="apple-touch-icon" href="assets/home-icon.png">
-<meta name="apple-mobile-web-app-title" content="ロセツシューティング">
+<meta name="apple-mobile-web-app-title" content="わんわんシューティング">
 <style>
 @import url('https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@700&display=swap');
 
@@ -229,7 +229,7 @@ canvas {
 
   <div id="start-screen">
     <div class="overlay-card">
-      <p class="overlay-caption" id="overlay-caption">🐾 ロセツシューティング 🐾</p>
+      <p class="overlay-caption" id="overlay-caption">🐾 わんわんシューティング 🐾</p>
 
       <h1 class="overlay-message" id="overlay-message">SHOOT!</h1>
       <p class="overlay-subhead" id="overlay-subhead">キャラクターを選んでね</p>
@@ -1892,13 +1892,13 @@ function setOverlayState(state, scoreValue = 0) {
   if (state === 'start') {
     overlayMessageEl.innerText = 'SHOOT!';
     overlaySubheadEl.innerText = 'キャラクターを選んでね';
-    overlayCaptionEl.innerText = '🐾 ロセツシューティング 🐾';
+    overlayCaptionEl.innerText = '🐾 わんわんシューティング 🐾';
     overlayScorePanel.classList.remove('visible');
     startBtn.innerText = 'START!';
   } else if (state === 'gameover') {
     overlayMessageEl.innerText = 'GAME OVER';
     overlaySubheadEl.innerText = 'クゥ〜ン、、';
-    overlayCaptionEl.innerText = '🐾 ロセツシューティング 🐾';
+    overlayCaptionEl.innerText = '🐾 わんわんシューティング 🐾';
     overlayScoreValue.innerText = scoreValue;
     overlayScorePanel.classList.add('visible');
     startBtn.innerText = 'もう一度チャレンジする';
