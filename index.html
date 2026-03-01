@@ -281,7 +281,6 @@ const COLORS = {
 };
 const MAX_HEARTS = 3;
 const INVINCIBLE_DURATION_FRAMES = 60 * 4;
-const BIG_BANG_DURATION_FRAMES = 90;
 const BASEBALL_STORM_FRAMES = 90;
 const AUTO_SHOOT_INTERVAL = 15;
 const BULLET_SPEED = 10;
@@ -313,7 +312,6 @@ let bullets = [];
 let enemies = [];
 let specialItems = [];
 let particles = [];
-let bigBangTimer = 0;
 let baseballStorm = null;
 let parfaitStorm = null;
 let frameCount = 0;
@@ -1299,19 +1297,6 @@ function drawSpecialItems(ctx) {
       ctx.closePath();
       ctx.fill();
       ctx.stroke();
-    } else if (item.type === 'bigbang') {
-      ctx.fillStyle = '#FF4500';
-      ctx.strokeStyle = '#FF0000';
-      ctx.lineWidth = 2;
-      ctx.beginPath();
-      ctx.arc(0, 0, item.r, 0, Math.PI*2);
-      ctx.fill();
-      ctx.stroke();
-      ctx.fillStyle = '#FFFFFF';
-      ctx.font = `bold ${Math.floor(item.r)}px sans-serif`;
-      ctx.textAlign = 'center';
-      ctx.textBaseline = 'middle';
-      ctx.fillText('💥', 0, 1);
     } else if (item.type === 'baseball') {
       ctx.fillStyle = '#FFFFFF';
       ctx.beginPath();
@@ -1631,7 +1616,7 @@ function spawnEnemy() {
 }
 
 function spawnSpecialItem() {
-  const types = ['invincible', 'bigbang', 'baseball'];
+  const types = ['invincible', 'baseball'];
   const type = types[Math.floor(Math.random() * types.length)];
   const r = 18;
   const x = r + Math.random() * (view.w - r * 2);
@@ -1831,12 +1816,7 @@ function updateGame() {
 
   if (player.hitTimer > 0) player.hitTimer--;
 
-  // big bang: destroy all enemies
-  if (bigBangTimer === BIG_BANG_DURATION_FRAMES) {
-    enemies.forEach(e => { e.hp = 0; killEnemy(e); });
-    enemies = [];
-  }
-  if (bigBangTimer > 0) bigBangTimer--;
+
 }
 
 function takeDamage() {
@@ -1854,9 +1834,6 @@ function collectItem(type) {
     player.invincible = true;
     player.invincibleTimer = INVINCIBLE_DURATION_FRAMES;
     spawnParticles(player.x + player.w/2, player.y, '#FFD700', 12);
-  } else if (type === 'bigbang') {
-    bigBangTimer = BIG_BANG_DURATION_FRAMES;
-    spawnParticles(player.x + player.w/2, player.y, '#FF4500', 16);
   } else if (type === 'baseball') {
     triggerBaseballStorm();
     spawnParticles(player.x + player.w/2, player.y, '#ffffff', 12);
@@ -1914,7 +1891,6 @@ function init() {
   enemies = [];
   specialItems = [];
   particles = [];
-  bigBangTimer = 0;
   baseballStorm = null;
   parfaitStorm = null;
   frameCount = 0;
@@ -1969,9 +1945,6 @@ function gameLoop() {
     drawBullets(ctx);
     drawPlayer(ctx);
     drawParticles(ctx);
-    if (bigBangTimer > 0) {
-      drawBigBangEffect(ctx, bigBangTimer / BIG_BANG_DURATION_FRAMES);
-    }
     drawBaseballStorm(ctx);
     drawParfaitStorm(ctx);
     drawHUD();
