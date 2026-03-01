@@ -2074,8 +2074,8 @@ function drawHUD() {
 
 // ===== Spawning =====
 function spawnEnemy() {
-  const types = ['onigiri', 'ichigo', 'donut', 'luchador', 'sumo', 'car', 'trump'];
-  let type = types[Math.floor(Math.random() * types.length)];
+  const types = ['onigiri', 'donut', 'luchador', 'sumo', 'car', 'trump'];
+  let type = Math.random() < 0.04 ? 'ichigo' : types[Math.floor(Math.random() * types.length)];
 
   const size = type === 'car' ? 50 + Math.random() * 16 : 38 + Math.random() * 20;
   const x = size + Math.random() * (view.w - size * 2);
