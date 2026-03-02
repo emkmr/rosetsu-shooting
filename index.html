@@ -283,7 +283,7 @@ canvas {
 @keyframes heartBurst {
   0%   { opacity: 0; transform: translate(0, 0) scale(0.2); }
   15%  { opacity: 1; transform: translate(var(--tx), var(--ty)) scale(1.2); }
-  60%  { opacity: 1; }
+  75%  { opacity: 1; }
   100% { opacity: 0; transform: translate(var(--tx2), var(--ty2)) scale(0.6); }
 }
 </style>
@@ -548,10 +548,10 @@ function burstHearts() {
     el.style.setProperty('--tx2', tx2);
     el.style.setProperty('--ty2', ty2);
     el.style.animationDelay    = (Math.random() * 0.2) + 's';
-    el.style.animationDuration = (1.0 + Math.random() * 0.5) + 's';
+    el.style.animationDuration = (1.5 + Math.random() * 0.5) + 's';
     overlay.appendChild(el);
   }
-  setTimeout(() => { overlay.innerHTML = ''; }, 2000);
+  setTimeout(() => { overlay.innerHTML = ''; }, 2800);
 }
 
 // Draw preview canvases
