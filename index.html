@@ -853,17 +853,25 @@ function drawChamo(c, size, frame) {
   c.beginPath(); c.ellipse(-s*0.26, -s*0.10 + bob, s*0.13, s*0.22, -0.3, 0, Math.PI*2); c.fill();
   c.beginPath(); c.ellipse( s*0.26, -s*0.10 + bob, s*0.13, s*0.22,  0.3, 0, Math.PI*2); c.fill();
 
-  // --- 頭（クリームふわ）---
+  // --- 頭（全周ふわ毛で丸く）---
+  // 外周ふわ毛（暗め）
+  c.fillStyle = '#B8986A';
+  for (let i = 0; i < 10; i++) {
+    const a = (Math.PI * 2 / 10) * i;
+    c.beginPath(); c.arc(Math.cos(a)*s*0.30, -s*0.20 + Math.sin(a)*s*0.30 + bob, s*0.13, 0, Math.PI*2); c.fill();
+  }
+  // 中間ふわ毛（メインカラー）
   c.fillStyle = '#D4B888';
-  c.beginPath(); c.arc(0, -s*0.20 + bob, s*0.27, 0, Math.PI*2); c.fill();
-  // ふわ毛テクスチャ
-  c.fillStyle = '#C0A070';
-  [[-0.18,-0.38],[0.18,-0.38],[0,-0.44],[-0.26,-0.24],[0.26,-0.24],[-0.10,-0.46],[0.10,-0.46]].forEach(([dx,dy]) => {
-    c.beginPath(); c.arc(dx*s, dy*s + bob, s*0.10, 0, Math.PI*2); c.fill();
-  });
-  // 頭のトップふわ（明るめ）
+  for (let i = 0; i < 10; i++) {
+    const a = (Math.PI * 2 / 10) * i + 0.3;
+    c.beginPath(); c.arc(Math.cos(a)*s*0.22, -s*0.20 + Math.sin(a)*s*0.22 + bob, s*0.13, 0, Math.PI*2); c.fill();
+  }
+  // 頭ベース
+  c.fillStyle = '#D4B888';
+  c.beginPath(); c.arc(0, -s*0.20 + bob, s*0.24, 0, Math.PI*2); c.fill();
+  // 頭頂明るめ
   c.fillStyle = '#DEC090';
-  [[-0.08,-0.44],[0.08,-0.44],[0,-0.50]].forEach(([dx,dy]) => {
+  [[-0.06,-0.40],[0.06,-0.40],[0,-0.44]].forEach(([dx,dy]) => {
     c.beginPath(); c.arc(dx*s, dy*s + bob, s*0.09, 0, Math.PI*2); c.fill();
   });
 
