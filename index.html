@@ -2410,7 +2410,6 @@ function gameOver() {
 function setOverlayState(state, scoreValue = 0) {
   charSelectRow.style.display = (state === 'start' || state === 'gameover') ? 'flex' : 'none';
   if (state === 'start') {
-    overlayMessageEl.innerText = '';
     overlayMessageEl.style.display = 'none';
     overlaySubheadEl.innerText = 'キャラクターを選んでね';
     overlayCaptionEl.src = 'assets/logo.png';
@@ -2418,7 +2417,7 @@ function setOverlayState(state, scoreValue = 0) {
     overlayScorePanel.classList.remove('visible');
     startBtn.innerText = 'START!';
   } else if (state === 'gameover') {
-    overlayMessageEl.style.display = '';
+    overlayMessageEl.style.display = 'block';
     overlaySubheadEl.innerText = 'クゥ〜ン、、';
     overlayCaptionEl.style.display = 'none';
     overlayScoreValue.innerText = scoreValue;
