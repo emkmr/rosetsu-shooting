@@ -443,6 +443,7 @@ const CHARS = [
   { id: 'tetsuju', name: '鉄二',   img: 'assets/tetsuju-icon.png', filter: 'saturate(0.55) brightness(1.1)' },
   { id: 'bal',     name: 'BAL',    img: 'assets/bal-icon.png',     filter: '' },
   { id: 'chamo',   name: 'ちゃも', img: 'assets/chamo-icon.png',   filter: '' },
+  { id: 'fuku',    name: 'フク',   img: 'assets/fuku-icon.png',    filter: '' },
 ];
 let charIndex = 0;
 
@@ -911,6 +912,109 @@ function drawChamo(c, size, frame) {
   c.stroke();
 }
 
+function drawFuku(c, size, frame) {
+  const s = size;
+  const bob = Math.sin(frame * 0.12) * s * 0.018;
+
+  // --- 後ろ足（白ふわ）---
+  c.fillStyle = '#E8E8E8';
+  c.beginPath(); c.ellipse(-s*0.20, s*0.38 + bob, s*0.17, s*0.11, -0.15, 0, Math.PI*2); c.fill();
+  c.beginPath(); c.ellipse( s*0.20, s*0.38 + bob, s*0.17, s*0.11,  0.15, 0, Math.PI*2); c.fill();
+  // ふわテクスチャ
+  c.fillStyle = '#D8D8D8';
+  [[-0.28,0.34],[0.28,0.34],[-0.22,0.42],[0.22,0.42]].forEach(([dx,dy]) => {
+    c.beginPath(); c.arc(dx*s, dy*s + bob, s*0.08, 0, Math.PI*2); c.fill();
+  });
+
+  // --- 胴体（白ふわ）---
+  c.fillStyle = '#F0F0F0';
+  c.beginPath(); c.ellipse(0, s*0.10 + bob, s*0.28, s*0.24, 0, 0, Math.PI*2); c.fill();
+  // 胴体ふわテクスチャ
+  c.fillStyle = '#E0E0E0';
+  [[-0.25,0.04],[0.25,0.04],[-0.22,0.18],[0.22,0.18],[0,0.22]].forEach(([dx,dy]) => {
+    c.beginPath(); c.arc(dx*s, dy*s + bob, s*0.10, 0, Math.PI*2); c.fill();
+  });
+
+  // --- ピンクバンダナ（胸元・ハート形）---
+  c.fillStyle = '#E8A8B8';
+  c.beginPath();
+  c.moveTo(0, s*0.18 + bob);
+  c.bezierCurveTo(-s*0.22, s*0.02 + bob, -s*0.28, s*0.08 + bob, -s*0.16, s*0.20 + bob);
+  c.bezierCurveTo(-s*0.08, s*0.28 + bob,  0, s*0.30 + bob,  0, s*0.30 + bob);
+  c.bezierCurveTo( 0, s*0.30 + bob,  s*0.08, s*0.28 + bob,  s*0.16, s*0.20 + bob);
+  c.bezierCurveTo( s*0.28, s*0.08 + bob,  s*0.22, s*0.02 + bob,  0, s*0.18 + bob);
+  c.fill();
+  // バンダナニット模様
+  c.strokeStyle = '#D490A8'; c.lineWidth = s*0.012; c.lineCap = 'round';
+  for (let i = -1; i <= 1; i++) {
+    c.beginPath(); c.moveTo(i*s*0.08, s*0.12+bob); c.lineTo(i*s*0.06, s*0.26+bob); c.stroke();
+  }
+
+  // --- 紫水玉リボン（首元）---
+  c.fillStyle = '#C8A0E0';
+  c.beginPath(); c.ellipse(0, -s*0.04 + bob, s*0.26, s*0.058, 0, 0, Math.PI*2); c.fill();
+  // 水玉
+  c.fillStyle = '#FFFFFF';
+  [[-0.16,-0.04],[-0.06,-0.05],[0.04,-0.04],[0.14,-0.05],[-0.11,-0.02],[0.09,-0.02]].forEach(([dx,dy]) => {
+    c.beginPath(); c.arc(dx*s, dy*s + bob, s*0.018, 0, Math.PI*2); c.fill();
+  });
+  // リボン結び目
+  c.fillStyle = '#B88CD0';
+  c.beginPath(); c.arc(s*0.20, -s*0.04 + bob, s*0.040, 0, Math.PI*2); c.fill();
+  // リボンの羽
+  c.fillStyle = '#C8A0E0';
+  c.beginPath(); c.ellipse(s*0.28, -s*0.07 + bob, s*0.055, s*0.032, -0.5, 0, Math.PI*2); c.fill();
+  c.beginPath(); c.ellipse(s*0.28, -s*0.01 + bob, s*0.055, s*0.032,  0.5, 0, Math.PI*2); c.fill();
+
+  // --- 前足（白ふわ）---
+  c.fillStyle = '#F0F0F0';
+  c.beginPath(); c.ellipse(-s*0.26, s*0.28 + bob, s*0.12, s*0.10, 0.1, 0, Math.PI*2); c.fill();
+  c.beginPath(); c.ellipse( s*0.26, s*0.28 + bob, s*0.12, s*0.10, -0.1, 0, Math.PI*2); c.fill();
+
+  // --- 耳（頭横に垂れる）---
+  c.fillStyle = '#DCDCDC';
+  c.beginPath(); c.ellipse(-s*0.26, -s*0.15 + bob, s*0.11, s*0.16, 0.1, 0, Math.PI*2); c.fill();
+  c.beginPath(); c.ellipse( s*0.26, -s*0.15 + bob, s*0.11, s*0.16, -0.1, 0, Math.PI*2); c.fill();
+
+  // --- 頭（全周白ふわ）---
+  c.fillStyle = '#D8D8D8';
+  for (let i = 0; i < 10; i++) {
+    const a = (Math.PI * 2 / 10) * i;
+    c.beginPath(); c.arc(Math.cos(a)*s*0.24, -s*0.22 + Math.sin(a)*s*0.24 + bob, s*0.11, 0, Math.PI*2); c.fill();
+  }
+  c.fillStyle = '#F0F0F0';
+  for (let i = 0; i < 10; i++) {
+    const a = (Math.PI * 2 / 10) * i + 0.3;
+    c.beginPath(); c.arc(Math.cos(a)*s*0.17, -s*0.22 + Math.sin(a)*s*0.17 + bob, s*0.11, 0, Math.PI*2); c.fill();
+  }
+  c.fillStyle = '#F5F5F5';
+  c.beginPath(); c.arc(0, -s*0.22 + bob, s*0.20, 0, Math.PI*2); c.fill();
+  // 頭頂ふわ
+  c.fillStyle = '#FFFFFF';
+  [[-0.05,-0.37],[0.05,-0.37],[0,-0.40]].forEach(([dx,dy]) => {
+    c.beginPath(); c.arc(dx*s, dy*s + bob, s*0.08, 0, Math.PI*2); c.fill();
+  });
+
+  // --- 目（こげ茶・丸）---
+  c.fillStyle = '#2A1208';
+  c.beginPath(); c.arc(-s*0.085, -s*0.24 + bob, s*0.052, 0, Math.PI*2); c.fill();
+  c.beginPath(); c.arc( s*0.085, -s*0.24 + bob, s*0.052, 0, Math.PI*2); c.fill();
+  c.fillStyle = '#FFFFFF';
+  c.beginPath(); c.arc(-s*0.070, -s*0.26 + bob, s*0.016, 0, Math.PI*2); c.fill();
+  c.beginPath(); c.arc( s*0.100, -s*0.26 + bob, s*0.016, 0, Math.PI*2); c.fill();
+
+  // --- 鼻（黒っぽい）---
+  c.fillStyle = '#1A0A04';
+  c.beginPath(); c.ellipse(0, -s*0.155 + bob, s*0.042, s*0.030, 0, 0, Math.PI*2); c.fill();
+
+  // --- 口 ---
+  c.strokeStyle = '#4A2810'; c.lineWidth = s*0.018; c.lineCap = 'round';
+  c.beginPath();
+  c.moveTo(-s*0.045, -s*0.11 + bob);
+  c.quadraticCurveTo(0, -s*0.07 + bob, s*0.045, -s*0.11 + bob);
+  c.stroke();
+}
+
 // ===== Drawing: Player =====
 function drawPlayer(ctx) {
   const s = TILE_SIZE * 0.055;
@@ -951,6 +1055,8 @@ function drawPlayer(ctx) {
     drawBal(ctx, TILE_SIZE * 1.3, frameCount);
   } else if (selectedChar === 'chamo') {
     drawChamo(ctx, TILE_SIZE * 1.4, frameCount);
+  } else if (selectedChar === 'fuku') {
+    drawFuku(ctx, TILE_SIZE * 1.4, frameCount);
   } else {
     drawChihuahua(ctx, s, frameCount);
   }
@@ -2634,6 +2740,7 @@ function gameLoop() {
     if (selectedChar === 'tetsuju') drawTetsuju(ctx, TILE_SIZE * 1.4, frameCount);
     else if (selectedChar === 'bal') drawBal(ctx, TILE_SIZE * 1.3, frameCount);
     else if (selectedChar === 'chamo') drawChamo(ctx, TILE_SIZE * 1.4, frameCount);
+    else if (selectedChar === 'fuku') drawFuku(ctx, TILE_SIZE * 1.4, frameCount);
     else drawChihuahua(ctx, s, frameCount);
     ctx.restore();
 
