@@ -280,10 +280,10 @@ canvas {
 }
 
 @keyframes heartFall {
-  0%   { opacity: 0;   transform: translateY(0) scale(0.4) rotate(-15deg); }
-  15%  { opacity: 1;   transform: translateY(-18px) scale(1.1) rotate(5deg); }
-  80%  { opacity: 0.9; }
-  100% { opacity: 0;   transform: translateY(110vh) scale(0.7) rotate(20deg); }
+  0%   { opacity: 0;   transform: translateY(0) scale(0.5) rotate(-10deg); }
+  10%  { opacity: 1; }
+  85%  { opacity: 1; }
+  100% { opacity: 0;   transform: translateY(100vh) scale(0.9) rotate(25deg); }
 }
 </style>
 </head>
@@ -525,19 +525,19 @@ function burstHearts() {
   const overlay = document.getElementById('heart-overlay');
   overlay.innerHTML = '';
   const emojis = ['🩷', '❤️', '💕', '💖', '💗'];
-  const count = 30;
+  const count = 35;
   for (let i = 0; i < count; i++) {
     const el = document.createElement('span');
     el.className = 'heart-particle';
     el.textContent = emojis[Math.floor(Math.random() * emojis.length)];
-    el.style.left = Math.random() * 100 + 'vw';
-    el.style.top = Math.random() * 60 + 'vh';
-    el.style.fontSize = (20 + Math.random() * 24) + 'px';
-    el.style.animationDelay = (Math.random() * 0.4) + 's';
-    el.style.animationDuration = (0.9 + Math.random() * 0.5) + 's';
+    el.style.left = (i / count * 110 - 5) + 'vw';
+    el.style.top = '-5vh';
+    el.style.fontSize = (18 + Math.random() * 20) + 'px';
+    el.style.animationDelay = (Math.random() * 0.6) + 's';
+    el.style.animationDuration = (1.2 + Math.random() * 0.6) + 's';
     overlay.appendChild(el);
   }
-  setTimeout(() => { overlay.innerHTML = ''; }, 1600);
+  setTimeout(() => { overlay.innerHTML = ''; }, 2200);
 }
 
 // Draw preview canvases
