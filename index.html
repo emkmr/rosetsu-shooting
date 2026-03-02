@@ -2418,7 +2418,7 @@ function setOverlayState(state, scoreValue = 0) {
     startBtn.innerText = 'START!';
   } else if (state === 'gameover') {
     overlayMessageEl.style.display = 'block';
-    overlaySubheadEl.innerText = 'クゥ〜ン、、';
+    overlaySubheadEl.innerText = '';
     overlayCaptionEl.style.display = 'none';
     overlayScoreValue.innerText = scoreValue;
     overlayScorePanel.classList.add('visible');
