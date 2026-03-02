@@ -848,51 +848,52 @@ function drawChamo(c, size, frame) {
   c.beginPath(); c.ellipse(-s*0.26, s*0.32 + bob, s*0.12, s*0.09, 0.15, 0, Math.PI*2); c.fill();
   c.beginPath(); c.ellipse( s*0.26, s*0.32 + bob, s*0.12, s*0.09, -0.15, 0, Math.PI*2); c.fill();
 
-  // --- ふわ耳（長め）---
+  // --- 耳（頭の横に自然に垂れる）---
+  c.fillStyle = '#B89060';
+  c.beginPath(); c.ellipse(-s*0.27, -s*0.12 + bob, s*0.11, s*0.19, 0.1, 0, Math.PI*2); c.fill();
+  c.beginPath(); c.ellipse( s*0.27, -s*0.12 + bob, s*0.11, s*0.19, -0.1, 0, Math.PI*2); c.fill();
   c.fillStyle = '#C8A870';
-  c.beginPath(); c.ellipse(-s*0.26, -s*0.10 + bob, s*0.13, s*0.22, -0.3, 0, Math.PI*2); c.fill();
-  c.beginPath(); c.ellipse( s*0.26, -s*0.10 + bob, s*0.13, s*0.22,  0.3, 0, Math.PI*2); c.fill();
+  c.beginPath(); c.ellipse(-s*0.27, -s*0.13 + bob, s*0.07, s*0.14, 0.1, 0, Math.PI*2); c.fill();
+  c.beginPath(); c.ellipse( s*0.27, -s*0.13 + bob, s*0.07, s*0.14, -0.1, 0, Math.PI*2); c.fill();
 
-  // --- 頭（全周ふわ毛で丸く）---
-  // 外周ふわ毛（暗め）
+  // --- 頭（全周ふわ毛で丸く・小さめ）---
   c.fillStyle = '#B8986A';
   for (let i = 0; i < 10; i++) {
     const a = (Math.PI * 2 / 10) * i;
-    c.beginPath(); c.arc(Math.cos(a)*s*0.30, -s*0.20 + Math.sin(a)*s*0.30 + bob, s*0.13, 0, Math.PI*2); c.fill();
+    c.beginPath(); c.arc(Math.cos(a)*s*0.24, -s*0.22 + Math.sin(a)*s*0.24 + bob, s*0.11, 0, Math.PI*2); c.fill();
   }
-  // 中間ふわ毛（メインカラー）
   c.fillStyle = '#D4B888';
   for (let i = 0; i < 10; i++) {
     const a = (Math.PI * 2 / 10) * i + 0.3;
-    c.beginPath(); c.arc(Math.cos(a)*s*0.22, -s*0.20 + Math.sin(a)*s*0.22 + bob, s*0.13, 0, Math.PI*2); c.fill();
+    c.beginPath(); c.arc(Math.cos(a)*s*0.17, -s*0.22 + Math.sin(a)*s*0.17 + bob, s*0.11, 0, Math.PI*2); c.fill();
   }
   // 頭ベース
   c.fillStyle = '#D4B888';
-  c.beginPath(); c.arc(0, -s*0.20 + bob, s*0.24, 0, Math.PI*2); c.fill();
+  c.beginPath(); c.arc(0, -s*0.22 + bob, s*0.19, 0, Math.PI*2); c.fill();
   // 頭頂明るめ
   c.fillStyle = '#DEC090';
-  [[-0.06,-0.40],[0.06,-0.40],[0,-0.44]].forEach(([dx,dy]) => {
-    c.beginPath(); c.arc(dx*s, dy*s + bob, s*0.09, 0, Math.PI*2); c.fill();
+  [[-0.05,-0.36],[0.05,-0.36],[0,-0.39]].forEach(([dx,dy]) => {
+    c.beginPath(); c.arc(dx*s, dy*s + bob, s*0.075, 0, Math.PI*2); c.fill();
   });
 
   // --- 目（こげ茶）---
   c.fillStyle = '#2A1A0A';
-  c.beginPath(); c.arc(-s*0.10, -s*0.22 + bob, s*0.055, 0, Math.PI*2); c.fill();
-  c.beginPath(); c.arc( s*0.10, -s*0.22 + bob, s*0.055, 0, Math.PI*2); c.fill();
+  c.beginPath(); c.arc(-s*0.08, -s*0.24 + bob, s*0.048, 0, Math.PI*2); c.fill();
+  c.beginPath(); c.arc( s*0.08, -s*0.24 + bob, s*0.048, 0, Math.PI*2); c.fill();
   // ハイライト
   c.fillStyle = '#FFFFFF';
-  c.beginPath(); c.arc(-s*0.08, -s*0.24 + bob, s*0.018, 0, Math.PI*2); c.fill();
-  c.beginPath(); c.arc( s*0.12, -s*0.24 + bob, s*0.018, 0, Math.PI*2); c.fill();
+  c.beginPath(); c.arc(-s*0.065, -s*0.26 + bob, s*0.016, 0, Math.PI*2); c.fill();
+  c.beginPath(); c.arc( s*0.095, -s*0.26 + bob, s*0.016, 0, Math.PI*2); c.fill();
 
   // --- 鼻（こげ茶楕円）---
   c.fillStyle = '#3A2010';
-  c.beginPath(); c.ellipse(0, -s*0.12 + bob, s*0.055, s*0.038, 0, 0, Math.PI*2); c.fill();
+  c.beginPath(); c.ellipse(0, -s*0.16 + bob, s*0.044, s*0.030, 0, 0, Math.PI*2); c.fill();
 
   // --- 口（にっこり）---
-  c.strokeStyle = '#5A3520'; c.lineWidth = s*0.022; c.lineCap = 'round';
+  c.strokeStyle = '#5A3520'; c.lineWidth = s*0.020; c.lineCap = 'round';
   c.beginPath();
-  c.moveTo(-s*0.06, -s*0.06 + bob);
-  c.quadraticCurveTo(0, -s*0.00 + bob, s*0.06, -s*0.06 + bob);
+  c.moveTo(-s*0.05, -s*0.10 + bob);
+  c.quadraticCurveTo(0, -s*0.05 + bob, s*0.05, -s*0.10 + bob);
   c.stroke();
 }
 
