@@ -2093,7 +2093,7 @@ function spawnEnemy() {
 
   const pts = { onigiri: 100, ichigo: 150, donut: 200, luchador: 175, sumo: 250, car: 220, trump: 300 };
   const p = patterns[type];
-  const hp = type === 'donut' ? 3 : type === 'luchador' ? 2 : type === 'sumo' ? 4 : type === 'car' ? 2 : type === 'trump' ? 5 : 1;
+  const hp = type === 'onigiri' ? 3 : type === 'donut' ? 3 : type === 'luchador' ? 2 : type === 'sumo' ? 4 : type === 'car' ? 2 : type === 'trump' ? 5 : 1;
 
   const enemy = {
     type, x, y: -size,
