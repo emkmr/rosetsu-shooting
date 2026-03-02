@@ -818,31 +818,37 @@ function drawChamo(c, size, frame) {
   c.beginPath(); c.ellipse(-s*0.18, s*0.40 + bob, s*0.16, s*0.10, -0.2, 0, Math.PI*2); c.fill();
   c.beginPath(); c.ellipse( s*0.18, s*0.40 + bob, s*0.16, s*0.10,  0.2, 0, Math.PI*2); c.fill();
 
-  // --- 白セーター胴体 ---
-  c.fillStyle = '#F0EEE8';
-  c.beginPath(); c.ellipse(0, s*0.12 + bob, s*0.30, s*0.26, 0, 0, Math.PI*2); c.fill();
-  // セーター模様（雪の結晶風ライン）
-  c.strokeStyle = '#D8D4CC'; c.lineWidth = s*0.018; c.lineCap = 'round';
-  [[0,-0.10],[0.08,-0.04],[-0.08,-0.04],[0.08,0.06],[-0.08,0.06],[0,0.14]].forEach(([dx,dy]) => {
-    c.beginPath(); c.moveTo((dx-0.04)*s, (dy+0.12)*s + bob); c.lineTo((dx+0.04)*s, (dy+0.12)*s + bob); c.stroke();
-    c.beginPath(); c.moveTo(dx*s, (dy+0.08)*s + bob); c.lineTo(dx*s, (dy+0.16)*s + bob); c.stroke();
-  });
+  // --- 胴体（クリームふわ）---
+  c.fillStyle = '#D4B888';
+  c.beginPath(); c.ellipse(0, s*0.12 + bob, s*0.28, s*0.25, 0, 0, Math.PI*2); c.fill();
 
-  // --- お花アクセ（胸元）---
-  const fx = 0, fy = s*0.05 + bob;
-  const petalColors = '#FFFFFF';
-  c.fillStyle = petalColors;
-  for (let i = 0; i < 6; i++) {
-    const angle = (Math.PI * 2 / 6) * i;
+  // --- デイジーチャーム（大きく目立つ）---
+  const fx = s*0.12, fy = s*0.08 + bob;
+  // 花びら（白・大きめ）
+  c.fillStyle = '#FFFFFF';
+  for (let i = 0; i < 8; i++) {
+    const angle = (Math.PI * 2 / 8) * i;
     c.beginPath();
-    c.ellipse(fx + Math.cos(angle)*s*0.065, fy + Math.sin(angle)*s*0.065, s*0.045, s*0.028, angle, 0, Math.PI*2);
+    c.ellipse(fx + Math.cos(angle)*s*0.105, fy + Math.sin(angle)*s*0.105, s*0.072, s*0.040, angle, 0, Math.PI*2);
     c.fill();
   }
-  c.fillStyle = '#F5C842';
-  c.beginPath(); c.arc(fx, fy, s*0.05, 0, Math.PI*2); c.fill();
+  // 花びらアウトライン
+  c.strokeStyle = '#E0D8CC'; c.lineWidth = s*0.012;
+  for (let i = 0; i < 8; i++) {
+    const angle = (Math.PI * 2 / 8) * i;
+    c.beginPath();
+    c.ellipse(fx + Math.cos(angle)*s*0.105, fy + Math.sin(angle)*s*0.105, s*0.072, s*0.040, angle, 0, Math.PI*2);
+    c.stroke();
+  }
+  // 中心（黄色）
+  c.fillStyle = '#F5C518';
+  c.beginPath(); c.arc(fx, fy, s*0.075, 0, Math.PI*2); c.fill();
+  // 中心ハイライト
+  c.fillStyle = '#FFE050';
+  c.beginPath(); c.arc(fx - s*0.02, fy - s*0.02, s*0.035, 0, Math.PI*2); c.fill();
 
-  // --- 前足（白セーター）---
-  c.fillStyle = '#F0EEE8';
+  // --- 前足（クリームベージュ）---
+  c.fillStyle = '#C8A87A';
   c.beginPath(); c.ellipse(-s*0.26, s*0.32 + bob, s*0.12, s*0.09, 0.15, 0, Math.PI*2); c.fill();
   c.beginPath(); c.ellipse( s*0.26, s*0.32 + bob, s*0.12, s*0.09, -0.15, 0, Math.PI*2); c.fill();
 
