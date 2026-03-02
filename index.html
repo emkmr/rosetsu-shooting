@@ -458,8 +458,7 @@ function buildCarousel() {
     const img = document.createElement('img');
     img.className = 'char-canvas';
     img.src = ch.img;
-    const imgSize = ch.id === 'chamo' ? 112 : 90;
-    img.width = imgSize; img.height = imgSize;
+    img.width = 90; img.height = 90;
     img.style.cssText = 'object-fit:contain;display:block;margin:0 auto 6px;' + (ch.filter ? `filter:${ch.filter};` : '');
     const name = document.createElement('div');
     name.className = 'char-name';
