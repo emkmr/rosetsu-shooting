@@ -299,7 +299,9 @@ canvas {
     <div class="overlay-card">
       <img id="overlay-caption" src="assets/logo.png" style="width:100%;max-width:320px;display:block;margin:0 auto 8px;">
 
-      <h1 class="overlay-message" id="overlay-message">SHOOT!</h1>
+      <div id="overlay-message" style="display:none;">
+        <img id="gameover-img" src="assets/gameover.png" style="width:100%;max-width:300px;display:block;margin:0 auto;">
+      </div>
       <p class="overlay-subhead" id="overlay-subhead">キャラクターを選んでね</p>
 
       <div class="char-select-row" id="char-select-row">
@@ -2417,7 +2419,6 @@ function setOverlayState(state, scoreValue = 0) {
     startBtn.innerText = 'START!';
   } else if (state === 'gameover') {
     overlayMessageEl.style.display = '';
-    overlayMessageEl.innerText = 'GAME OVER';
     overlaySubheadEl.innerText = 'クゥ〜ン、、';
     overlayCaptionEl.style.display = 'none';
     overlayScoreValue.innerText = scoreValue;
