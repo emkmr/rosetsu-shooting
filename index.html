@@ -848,32 +848,10 @@ function drawChamo(c, size, frame) {
   c.beginPath(); c.ellipse(-s*0.26, s*0.32 + bob, s*0.12, s*0.09, 0.15, 0, Math.PI*2); c.fill();
   c.beginPath(); c.ellipse( s*0.26, s*0.32 + bob, s*0.12, s*0.09, -0.15, 0, Math.PI*2); c.fill();
 
-  // --- 垂れ耳（マルチーズ風・上丸く下に長く垂れる）---
-  c.fillStyle = '#B89860';
-  // 左耳
-  c.beginPath();
-  c.moveTo(-s*0.16, -s*0.32 + bob);
-  c.bezierCurveTo(-s*0.38, -s*0.28 + bob, -s*0.40, s*0.10 + bob, -s*0.28, s*0.22 + bob);
-  c.bezierCurveTo(-s*0.18, s*0.28 + bob, -s*0.12, s*0.10 + bob, -s*0.14, -s*0.20 + bob);
-  c.closePath(); c.fill();
-  // 右耳
-  c.beginPath();
-  c.moveTo( s*0.16, -s*0.32 + bob);
-  c.bezierCurveTo( s*0.38, -s*0.28 + bob,  s*0.40, s*0.10 + bob,  s*0.28, s*0.22 + bob);
-  c.bezierCurveTo( s*0.18, s*0.28 + bob,  s*0.12, s*0.10 + bob,  s*0.14, -s*0.20 + bob);
-  c.closePath(); c.fill();
-  // 耳の内側ハイライト
+  // --- ふわ耳（長め）---
   c.fillStyle = '#C8A870';
-  c.beginPath();
-  c.moveTo(-s*0.18, -s*0.26 + bob);
-  c.bezierCurveTo(-s*0.30, -s*0.18 + bob, -s*0.32, s*0.06 + bob, -s*0.22, s*0.16 + bob);
-  c.bezierCurveTo(-s*0.16, s*0.20 + bob, -s*0.14, s*0.06 + bob, -s*0.16, -s*0.18 + bob);
-  c.closePath(); c.fill();
-  c.beginPath();
-  c.moveTo( s*0.18, -s*0.26 + bob);
-  c.bezierCurveTo( s*0.30, -s*0.18 + bob,  s*0.32, s*0.06 + bob,  s*0.22, s*0.16 + bob);
-  c.bezierCurveTo( s*0.16, s*0.20 + bob,  s*0.14, s*0.06 + bob,  s*0.16, -s*0.18 + bob);
-  c.closePath(); c.fill();
+  c.beginPath(); c.ellipse(-s*0.26, -s*0.10 + bob, s*0.13, s*0.22, -0.3, 0, Math.PI*2); c.fill();
+  c.beginPath(); c.ellipse( s*0.26, -s*0.10 + bob, s*0.13, s*0.22,  0.3, 0, Math.PI*2); c.fill();
 
   // --- 頭（クリームふわ）---
   c.fillStyle = '#D4B888';
