@@ -297,7 +297,7 @@ canvas {
 
   <div id="start-screen">
     <div class="overlay-card">
-      <p class="overlay-caption" id="overlay-caption">🐾 Wan Wan Shooter 🐾</p>
+      <img id="overlay-caption" src="assets/logo.png" style="width:100%;max-width:320px;display:block;margin:0 auto 8px;">
 
       <h1 class="overlay-message" id="overlay-message">SHOOT!</h1>
       <p class="overlay-subhead" id="overlay-subhead">キャラクターを選んでね</p>
@@ -2411,14 +2411,15 @@ function setOverlayState(state, scoreValue = 0) {
     overlayMessageEl.innerText = '';
     overlayMessageEl.style.display = 'none';
     overlaySubheadEl.innerText = 'キャラクターを選んでね';
-    overlayCaptionEl.innerText = '🐾 Wan Wan Shooter 🐾';
+    overlayCaptionEl.src = 'assets/logo.png';
+    overlayCaptionEl.style.display = 'block';
     overlayScorePanel.classList.remove('visible');
     startBtn.innerText = 'START!';
   } else if (state === 'gameover') {
     overlayMessageEl.style.display = '';
     overlayMessageEl.innerText = 'GAME OVER';
     overlaySubheadEl.innerText = 'クゥ〜ン、、';
-    overlayCaptionEl.innerText = '🐾 Wan Wan Shooter 🐾';
+    overlayCaptionEl.style.display = 'none';
     overlayScoreValue.innerText = scoreValue;
     overlayScorePanel.classList.add('visible');
     startBtn.innerText = 'もう一度チャレンジする';
