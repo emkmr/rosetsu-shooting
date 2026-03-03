@@ -2119,6 +2119,9 @@ function triggerBaseballStorm() {
       spin: Math.random() * Math.PI
     });
   }
+  // 画面いっぱいになった瞬間に全敵を一掃
+  enemies.forEach(e => killEnemy(e));
+  enemies = [];
 }
 
 function drawTrumpBullets(ctx) {
