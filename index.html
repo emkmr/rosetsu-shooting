@@ -2583,7 +2583,7 @@ function updateGame() {
     tb.y += tb.vy;
     if (tb.x < -tb.r || tb.x > view.w + tb.r || tb.y > view.h + tb.r) return false;
     if (circleRectOverlap(tb.x, tb.y, tb.r * 0.8, player.x, player.y, player.w, player.h)) {
-      takeDamage();
+      if (!player.invincible) takeDamage();
       return false;
     }
     return true;
